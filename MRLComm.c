@@ -771,6 +771,16 @@ void processCommand() {
   case AF_SET_SERVO:
     afSetServo();
     break;
+  // Start of i2c read and writes
+  case I2C_READ:
+    i2cRead();
+    break;
+  case I2C_WRITE:
+    i2cWrite();
+    break;
+  case I2C_WRITE_READ:
+    i2cWriteRead();
+    break;
   case SET_DEBUG:
     debug = ioCmd[1];
     if (debug)
@@ -842,6 +852,14 @@ void updateStats() {
 
 // ==================== control methods begin ========================
 
+void sensorPollingStart() {
+  // TODO: implement me.
+}
+
+void sensorPollingStop() {
+  // TODO: implement me.
+}
+
 // Start of Adafruit16CServoDriver methods
 // I2C write
 void write8(uint8_t i2caddr, uint8_t addr, uint8_t d) {
@@ -870,6 +888,18 @@ void setPWM(uint8_t i2caddr, uint8_t num, uint16_t on, uint16_t off) {
   WIRE.endTransmission();
 }
 // End of Adafruit16CServoDriver methods
+
+// Start of I2CControl interface methods
+void i2cRead(){
+// TODO: implement me.
+}
+void i2cWrite(){
+// TODO: implement me.
+}
+void i2cWriteRead(){
+// TODO: implement me.
+}
+// End of I2CControl interface methods
 
 // MRL Command helper methods below:
 // GET_VERSION
@@ -1493,7 +1523,7 @@ void updateUltrasonic(device_type& sensor) {
       sensor.lastValue = 0;
     }
   } else if (pin.state == ECHO_STATE_GOOD_RANGE || pin.state == ECHO_STATE_TIMEOUT) {
-    publishSensorDataLong(pin.address, sensor.lastValue);
+    // publishSensorDataLong(pin.address, sensor.lastValue);
     pin.state = ECHO_STATE_START;
   } // end else if
 }
@@ -1538,15 +1568,3 @@ void updateServo(device_type& servo) {
     // TODO: implement me.
 }
 //========== device update methods end ==================
-
-void sensorPollingStart() {
-  // TODO: implement me.
-}
-
-void sensorPollingStop() {
-  // TODO: implement me.
-}
-
-void publishSensorDataLong(int address, unsigned long lastValue) {
-  // TODO: remove me.
-}
