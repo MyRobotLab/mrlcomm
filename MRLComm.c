@@ -1522,6 +1522,7 @@ void updatePulse(device_type& sensor) {
     // publishPulseStop(pin.state, pin.sensorIndex, pin.address, sensor.count);
     // deactivate
     // lastDebounceTime[digitalReadPin[i]] = millis();
+    // test git
   }
   if (pin.state == PUBLISH_PULSE_STOP) {
     //pin.isActive = false;
