@@ -41,11 +41,11 @@
 * Requirements: MyRobotLab running on a computer & a serial connection
 *
 *  TODO - need a method to identify type of board http://forum.arduino.cc/index.php?topic=100557.0
+*  TODO - getBoardInfo() - returns board info !
+*  TODO - getPinInfo() - returns pin info !
+*  TODO - implement with std::vector vs linked list - https://github.com/maniacbug/StandardCplusplus/blob/master/README.md
+*
 */
-
-// TODO - getBoardInfo() - returns board info !
-// TODO - getPinInfo() - returns pin info !
-// TODO - implement with std::vector vs linked list - https://github.com/maniacbug/StandardCplusplus/blob/master/README.md
 
 // Included as a 3rd party arduino library from here: https://github.com/ivanseidel/LinkedList/
 // #include <LinkedList.h>
@@ -493,18 +493,9 @@ void LinkedList<T>::clear() {
 #define ECHO_STATE_GOOD_RANGE 6
 #define ECHO_STATE_TIMEOUT  7
 
-//not needed, using SENSOR_TYPE_XXX_PIN_ARRAY instead
-//#define SENSOR_TYPE_ANALOG_PIN_READER 3
-//#define SENSOR_TYPE_DIGITAL_PIN_READER 1
-
 int msgSize = 0; // the NUM_BYTES of current message
 unsigned int debounceDelay = 50; // in ms
 byte msgBuf[64];
-
-//not used anywhere
-//int nextDeviceId  = 0;
-
-//#define MAX_DEVICES		30
 
 typedef struct {
   // general
@@ -1369,6 +1360,7 @@ void sendError(int type) {
   Serial.write(2); // size = 1 FN + 1 TYPE
   Serial.write(PUBLISH_MRLCOMM_ERROR);
   Serial.write(type);
+  Serial.flush();
 }
 
 void publishDeviceAttached(device_type& ptr){
@@ -1398,6 +1390,7 @@ void sendServoEvent(device_type& s, int eventType) {
   Serial.write(eventType);
   Serial.write(s.currentPos);
   Serial.write(s.targetPos);
+  Serial.flush();
 }
 
 void publishVersion() {
@@ -1417,6 +1410,7 @@ void publishLoadTimingEvent(unsigned long loadTime) {
   Serial.write((byte)(loadTime >> 16));
   Serial.write((byte)(loadTime >> 8));
   Serial.write((byte)loadTime & 0xff);
+  Serial.flush();
 }
 
 void sendCommandAck() {
@@ -1495,6 +1489,7 @@ void updateAnalogPinArray(device_type& device) {
 			Serial.write(pin.value >> 8);   // MSB
 			Serial.write(pin.value & 0xff); // LSB
 		}
+		Serial.flush();
 	}
 }
 
@@ -1512,6 +1507,7 @@ void updateDigitalPinArray(device_type& sensor) {
 			pin.value = digitalRead(pin.address);
 			Serial.write(pin.value & 0xff); // LSB
 		}
+		Serial.flush();
 	}
 }
 
