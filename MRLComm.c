@@ -41,11 +41,11 @@
 * Requirements: MyRobotLab running on a computer & a serial connection
 *
 *  TODO - need a method to identify type of board http://forum.arduino.cc/index.php?topic=100557.0
+*  TODO - getBoardInfo() - returns board info !
+*  TODO - getPinInfo() - returns pin info !
+*  TODO - implement with std::vector vs linked list - https://github.com/maniacbug/StandardCplusplus/blob/master/README.md
+*
 */
-
-// TODO - getBoardInfo() - returns board info !
-// TODO - getPinInfo() - returns pin info !
-// TODO - implement with std::vector vs linked list - https://github.com/maniacbug/StandardCplusplus/blob/master/README.md
 
 // Included as a 3rd party arduino library from here: https://github.com/ivanseidel/LinkedList/
 // #include <LinkedList.h>
@@ -345,7 +345,7 @@ void LinkedList<T>::clear() {
 #define FIX_PIN_OFFSET		11
 // {i2cRead int int byte[] int}
 #define I2C_READ		12
-// {i2cWrite int int byte[] int}
+// {i2cWrite int int byte[]}
 #define I2C_WRITE		13
 // {i2cWriteRead int int byte[] int byte[] int}
 #define I2C_WRITE_READ		14
@@ -493,16 +493,9 @@ void LinkedList<T>::clear() {
 #define ECHO_STATE_GOOD_RANGE 6
 #define ECHO_STATE_TIMEOUT  7
 
-#define SENSOR_TYPE_ANALOG_PIN_READER 3
-#define SENSOR_TYPE_DIGITAL_PIN_READER 1
-
 int msgSize = 0; // the NUM_BYTES of current message
 unsigned int debounceDelay = 50; // in ms
 byte msgBuf[64];
-
-int nextDeviceId  = 0;
-
-#define MAX_DEVICES		30
 
 typedef struct {
   // general
@@ -560,7 +553,7 @@ unsigned long lastMicros = 0;
 int byteCount = 0;
 unsigned char newByte = 0;
 unsigned char ioCmd[64];  // message buffer for all inbound messages
-int readValue;
+//int readValue; not used anywhere
 
 // FIXME - normalize with sampleRate ..
 int loadTimingModulus = 1000;
@@ -574,7 +567,7 @@ unsigned int sampleRate = 1; // 1 - 65,535 modulus of the loopcount - allowing y
 
 // define any functions that pass structs into them.
 void sendServoEvent(device_type& s, int eventType);
-void handlePulseType(pin_type& pin);
+//void handlePulseType(pin_type& pin); //not defined anywhere
 // sensor handlers
 // void handleUltrasonic(device_type& d);
 
@@ -612,15 +605,34 @@ void softReset() {
     s.speed = 100;
     if (s.servo != 0) {
       s.servo->detach();
+      delete s.servo;
     }
   }
+  deviceList.clear();
+  //resetting global var to default
   loopCount = 0;
+  loadTimingModulus=1000;
+  loadTimingEnabled = false;
+  sampleRate = 1;
+  debounceDelay = 50;
 }
 
+// ============= device access methods begin =============================
+// basic crud operations for devices to seperate the implementation
+// details of the data structure containing all the devices
+device_type* getDevice(unsigned long id);
+void removeDevice(unsigned long id);
+void addDevice(device_type*);
+// ============= device access methods end ===============================
+
+
+// ============= utility methods begin ===============================
 unsigned long toUnsignedLongfromBigEndian(unsigned char* buffer, int start) {
   return (((unsigned long)buffer[start] << 24) + ((unsigned long)buffer[start + 1] << 16) + (buffer[start + 2] << 8) + buffer[start + 3]);
 }
+// ============= utility methods end ===============================
 
+// ============= serial methods begin ===============================
 bool getCommand() {
   // handle serial data begin
   int bytesAvailable = Serial.available();
@@ -771,11 +783,21 @@ void processCommand() {
   case AF_SET_SERVO:
     afSetServo();
     break;
+  // Start of i2c read and writes
+  case I2C_READ:
+    i2cRead();
+    break;
+  case I2C_WRITE:
+    i2cWrite();
+    break;
+  case I2C_WRITE_READ:
+    i2cWriteRead();
+    break;
   case SET_DEBUG:
     debug = ioCmd[1];
     if (debug)
     {
-      publishDebug("Debug logging enabled.");
+      publishDebug(F("Debug logging enabled."));
     }
     break;
   default:
@@ -788,6 +810,9 @@ void processCommand() {
   memset(ioCmd, 0, sizeof(ioCmd));
   byteCount = 0;
 } // process Command
+
+// ============= serial methods end ===============================
+
 
 /**
  * updateDevices updates each type of device put on the device list
@@ -842,6 +867,14 @@ void updateStats() {
 
 // ==================== control methods begin ========================
 
+void sensorPollingStart() {
+  // TODO: implement me.
+}
+
+void sensorPollingStop() {
+  // TODO: implement me.
+}
+
 // Start of Adafruit16CServoDriver methods
 // I2C write
 void write8(uint8_t i2caddr, uint8_t addr, uint8_t d) {
@@ -870,6 +903,38 @@ void setPWM(uint8_t i2caddr, uint8_t num, uint16_t on, uint16_t off) {
   WIRE.endTransmission();
 }
 // End of Adafruit16CServoDriver methods
+
+// Start of I2CControl interface methods
+void i2cRead(){
+  WIRE.beginTransmission(ioCmd[1]); // address to the i2c device
+  WIRE.write(ioCmd[2]);             // device memory address to read from
+  WIRE.endTransmission();
+  WIRE.requestFrom((uint8_t)ioCmd[1], (uint8_t)ioCmd[3]); // reqest a number of bytes to read
+  Serial.write(MAGIC_NUMBER);
+	Serial.write(ioCmd[3]);
+	Serial.write(16);                     // TODO Replace with proper PUBLISH_I2C_DATA 
+  for (int i = 1; i < ioCmd[3]; i++) {  // read the requested bytes            
+    if (WIRE.available()){              // slave may send less than requested
+      Serial.write(WIRE.read());        // and pass back to the host
+    }
+	  else {
+	    Serial.write(0);                 // to aviod incomplete messages
+    }
+  }
+}
+
+void i2cWrite(){
+  WIRE.beginTransmission(ioCmd[1]);   // address to the i2c device
+  WIRE.write(ioCmd[2]);               // device memory address to write to
+  for (int i = 3; i < msgSize; i++) { // data to write
+    WIRE.write(ioCmd[i]);  
+  }
+  WIRE.endTransmission();
+}
+
+void i2cWriteRead(){
+}
+// End of I2CControl interface methods
 
 // MRL Command helper methods below:
 // GET_VERSION
@@ -1118,7 +1183,7 @@ void setSampleRate() {
 // Adafruit commands
 // AF_BEGIN
 void afBegin() {
-  WIRE.begin();
+  WIRE.begin(); //not sure if it's good to be able to initialize the WIRE library multiple time 
   write8(ioCmd[1],PCA9685_MODE1, 0x0);
 }
 
@@ -1161,7 +1226,8 @@ void afSetServo() {
 // Device types are defined in org.myrobotlab.service.interface.Device
 // TODO crud device_type operations create remove (update not needed?) delete
 // TODO probably need getDeviceId to decode id from Arduino.java - because if its
-// implemented as a ptr it will be 4 bytes - if it is a generics index it could be implemented with 1 byte
+// implemented as a ptr it will be 4 bytes - if it is a generics index
+// it could be implemented with 1 byte
 void attachDevice(){
 	// TODO GET SERVICE NAME
 	int deviceType   = ioCmd[1];
@@ -1228,12 +1294,12 @@ void addSensorDataListener() {
     // TODO: special considerations based on the type of sensor to
     // setup the pins correctly for multi-pin sensors
   }
-  publishDebug("adding pins.");
+  publishDebug(F("adding pins."));
   s.pins = sensorPins;
-  publishDebug("Adding sensors");
+  publishDebug(F("Adding sensors"));
   deviceList.add(s);
   publishDebug("NUM SENS:"+String(deviceList.size()));
-  publishDebug("Done with sensor attach.");
+  publishDebug(F("Done with sensor attach."));
 }
 
 // SENSOR_ATTACH
@@ -1294,6 +1360,7 @@ void sendError(int type) {
   Serial.write(2); // size = 1 FN + 1 TYPE
   Serial.write(PUBLISH_MRLCOMM_ERROR);
   Serial.write(type);
+  Serial.flush();
 }
 
 void publishDeviceAttached(device_type& ptr){
@@ -1323,6 +1390,7 @@ void sendServoEvent(device_type& s, int eventType) {
   Serial.write(eventType);
   Serial.write(s.currentPos);
   Serial.write(s.targetPos);
+  Serial.flush();
 }
 
 void publishVersion() {
@@ -1342,6 +1410,7 @@ void publishLoadTimingEvent(unsigned long loadTime) {
   Serial.write((byte)(loadTime >> 16));
   Serial.write((byte)(loadTime >> 8));
   Serial.write((byte)loadTime & 0xff);
+  Serial.flush();
 }
 
 void sendCommandAck() {
@@ -1405,6 +1474,7 @@ void updateServos(device_type& s) {
   }
 }
 
+//add pin.rateModulus, some sensor don't need to send back data every each ms
 void updateAnalogPinArray(device_type& device) {
 	if (device.pins.size() > 0) {
 		Serial.write(MAGIC_NUMBER);
@@ -1419,9 +1489,11 @@ void updateAnalogPinArray(device_type& device) {
 			Serial.write(pin.value >> 8);   // MSB
 			Serial.write(pin.value & 0xff); // LSB
 		}
+		Serial.flush();
 	}
 }
 
+//add pin.rateModulus, some sensor don't need to send back data every each ms
 void updateDigitalPinArray(device_type& sensor) {
 	if (sensor.pins.size() > 0) {
 		Serial.write(MAGIC_NUMBER);
@@ -1435,6 +1507,7 @@ void updateDigitalPinArray(device_type& sensor) {
 			pin.value = digitalRead(pin.address);
 			Serial.write(pin.value & 0xff); // LSB
 		}
+		Serial.flush();
 	}
 }
 
@@ -1493,7 +1566,7 @@ void updateUltrasonic(device_type& sensor) {
       sensor.lastValue = 0;
     }
   } else if (pin.state == ECHO_STATE_GOOD_RANGE || pin.state == ECHO_STATE_TIMEOUT) {
-    publishSensorDataLong(pin.address, sensor.lastValue);
+    // publishSensorDataLong(pin.address, sensor.lastValue);
     pin.state = ECHO_STATE_START;
   } // end else if
 }
@@ -1522,6 +1595,7 @@ void updatePulse(device_type& sensor) {
     // publishPulseStop(pin.state, pin.sensorIndex, pin.address, sensor.count);
     // deactivate
     // lastDebounceTime[digitalReadPin[i]] = millis();
+    // test git
   }
   if (pin.state == PUBLISH_PULSE_STOP) {
     //pin.isActive = false;
@@ -1537,15 +1611,3 @@ void updateServo(device_type& servo) {
     // TODO: implement me.
 }
 //========== device update methods end ==================
-
-void sensorPollingStart() {
-  // TODO: implement me.
-}
-
-void sensorPollingStop() {
-  // TODO: implement me.
-}
-
-void publishSensorDataLong(int address, unsigned long lastValue) {
-  // TODO: remove me.
-}
