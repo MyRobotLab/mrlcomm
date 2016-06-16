@@ -44,7 +44,6 @@
 *  TODO - getBoardInfo() - returns board info !
 *  TODO - getPinInfo() - returns pin info !
 *  TODO - implement with std::vector vs linked list - https://github.com/maniacbug/StandardCplusplus/blob/master/README.md
-*
 */
 
 // Included as a 3rd party arduino library from here: https://github.com/ivanseidel/LinkedList/
@@ -316,125 +315,133 @@ void LinkedList<T>::clear() {
 // serial protocol functions
 #define MAGIC_NUMBER            170 // 10101010
 
-// FIXME - first rule of generate club is: whole file should be generated
-// so this needs to be turned itno a .h if necessary - but the manual munge
-// should be replaced
+/**
+* FIXME - first rule of generate club is: whole file should be generated
+* so this needs to be turned itno a .h if necessary - but the manual munge
+* should be replaced
+*/
+
 // ----- MRLCOMM FUNCTION GENERATED INTERFACE BEGIN -----------
 ///// INO GENERATED DEFINITION BEGIN //////
-// {publishMRLCommError Integer}
+// {publishMRLCommError Integer} 
 #define PUBLISH_MRLCOMM_ERROR		1
-// {getVersion}
+// {getVersion} 
 #define GET_VERSION		2
-// {publishVersion Integer}
+// {publishVersion Integer} 
 #define PUBLISH_VERSION		3
-// {analogReadPollingStart Integer Integer}
-#define ANALOG_READ_POLLING_START		4
-// {analogReadPollingStop int}
-#define ANALOG_READ_POLLING_STOP		5
-// {analogWrite int int}
-#define ANALOG_WRITE		6
-// {createDevice int int String}
-#define CREATE_DEVICE		7
-// {digitalReadPollingStart Integer Integer}
-#define DIGITAL_READ_POLLING_START		8
-// {digitalReadPollingStop int}
-#define DIGITAL_READ_POLLING_STOP		9
-// {digitalWrite int int}
-#define DIGITAL_WRITE		10
-// {fixPinOffset Integer}
-#define FIX_PIN_OFFSET		11
-// {i2cRead int int byte[] int}
-#define I2C_READ		12
-// {i2cWrite int int byte[]}
-#define I2C_WRITE		13
-// {i2cWriteRead int int byte[] int byte[] int}
-#define I2C_WRITE_READ		14
-// {motorAttach MotorControl int}
-#define MOTOR_ATTACH		15
-// {motorDetach MotorControl}
-#define MOTOR_DETACH		16
-// {motorMove MotorControl}
-#define MOTOR_MOVE		17
-// {motorMoveTo MotorControl}
-#define MOTOR_MOVE_TO		18
-// {motorReset MotorControl}
-#define MOTOR_RESET		19
-// {motorStop MotorControl}
-#define MOTOR_STOP		20
-// {pinMode Integer Integer}
-#define PIN_MODE		21
-// {publishDebug String}
-#define PUBLISH_DEBUG		22
-// {publishLoadTimingEvent Long}
-#define PUBLISH_LOAD_TIMING_EVENT		23
-// {publishMessageAck}
-#define PUBLISH_MESSAGE_ACK		24
-// {publishPin Pin}
-#define PUBLISH_PIN		25
-// {publishPulse Long}
-#define PUBLISH_PULSE		26
-// {publishPulseStop Integer}
-#define PUBLISH_PULSE_STOP		27
-// {publishSensorData Object}
-#define PUBLISH_SENSOR_DATA		28
-// {publishServoEvent Integer}
-#define PUBLISH_SERVO_EVENT		29
-// {publishTrigger Pin}
-#define PUBLISH_TRIGGER		30
-// {pulse int int int int}
-#define PULSE		31
-// {pulseStop}
-#define PULSE_STOP		32
-// {releaseDevice int int}
-#define RELEASE_DEVICE		33
-// {resolveSensorData SensorDataPublisher int[]}
-#define RESOLVE_SENSOR_DATA		34
-// {sensorAttach SensorDataPublisher}
-#define SENSOR_ATTACH		35
-// {sensorPollingStart String int}
-#define SENSOR_POLLING_START		36
-// {sensorPollingStop String}
-#define SENSOR_POLLING_STOP		37
-// {servoAttach Servo Integer}
-#define SERVO_ATTACH		38
-// {servoDetach Servo}
-#define SERVO_DETACH		39
-// {servoEventsEnabled Servo}
-#define SERVO_EVENTS_ENABLED		40
-// {servoSweepStart Servo}
-#define SERVO_SWEEP_START		41
-// {servoSweepStop Servo}
-#define SERVO_SWEEP_STOP		42
-// {servoWrite Servo}
-#define SERVO_WRITE		43
-// {servoWriteMicroseconds Servo}
-#define SERVO_WRITE_MICROSECONDS		44
-// {setDebounce int}
-#define SET_DEBOUNCE		45
-// {setDebug boolean}
-#define SET_DEBUG		46
-// {setDigitalTriggerOnly Boolean}
-#define SET_DIGITAL_TRIGGER_ONLY		47
-// {setLoadTimingEnabled boolean}
-#define SET_LOAD_TIMING_ENABLED		48
-// {setPWMFrequency Integer Integer}
-#define SET_PWMFREQUENCY		49
-// {setSampleRate int}
-#define SET_SAMPLE_RATE		50
-// {setSerialRate int}
-#define SET_SERIAL_RATE		51
-// {setServoSpeed Servo}
-#define SET_SERVO_SPEED		52
-// {setTrigger int int int}
-#define SET_TRIGGER		53
-// {softReset}
-#define SOFT_RESET		54
+// {addSensorDataListener SensorDataListener} 
+#define ADD_SENSOR_DATA_LISTENER		4
+// {analogReadPollingStart Integer Integer} 
+#define ANALOG_READ_POLLING_START		5
+// {analogReadPollingStop int} 
+#define ANALOG_READ_POLLING_STOP		6
+// {analogWrite int int} 
+#define ANALOG_WRITE		7
+// {attachDevice Device} 
+#define ATTACH_DEVICE		8
+// {createDevice int int String} 
+#define CREATE_DEVICE		9
+// {digitalReadPollingStart Integer Integer} 
+#define DIGITAL_READ_POLLING_START		10
+// {digitalReadPollingStop int} 
+#define DIGITAL_READ_POLLING_STOP		11
+// {digitalWrite int int} 
+#define DIGITAL_WRITE		12
+// {fixPinOffset Integer} 
+#define FIX_PIN_OFFSET		13
+// {i2cRead int int byte[] int} 
+#define I2C_READ		14
+// {i2cWrite int int byte[] int} 
+#define I2C_WRITE		15
+// {i2cWriteRead int int byte[] int byte[] int} 
+#define I2C_WRITE_READ		16
+// {intsToString int[] int int} 
+#define INTS_TO_STRING		17
+// {motorAttach String int} 
+#define MOTOR_ATTACH		18
+// {motorDetach MotorControl} 
+#define MOTOR_DETACH		19
+// {motorMove MotorControl} 
+#define MOTOR_MOVE		20
+// {motorMoveTo MotorControl} 
+#define MOTOR_MOVE_TO		21
+// {motorReset MotorControl} 
+#define MOTOR_RESET		22
+// {motorStop MotorControl} 
+#define MOTOR_STOP		23
+// {pinMode int String} 
+#define PIN_MODE		24
+// {publishAttachedDevice Device} 
+#define PUBLISH_ATTACHED_DEVICE		25
+// {publishDebug String} 
+#define PUBLISH_DEBUG		26
+// {publishMessageAck} 
+#define PUBLISH_MESSAGE_ACK		27
+// {publishPin Pin} 
+#define PUBLISH_PIN		28
+// {publishPulse Long} 
+#define PUBLISH_PULSE		29
+// {publishPulseStop Integer} 
+#define PUBLISH_PULSE_STOP		30
+// {publishSensorData SensorData} 
+#define PUBLISH_SENSOR_DATA		31
+// {publishServoEvent Integer} 
+#define PUBLISH_SERVO_EVENT		32
+// {publishStatus Long Integer} 
+#define PUBLISH_STATUS		33
+// {publishTrigger Pin} 
+#define PUBLISH_TRIGGER		34
+// {pulse int int int int} 
+#define PULSE		35
+// {pulseStop} 
+#define PULSE_STOP		36
+// {releaseDevice int int} 
+#define RELEASE_DEVICE		37
+// {sensorPollingStart Integer} 
+#define SENSOR_POLLING_START		38
+// {sensorPollingStop Integer} 
+#define SENSOR_POLLING_STOP		39
+// {servoAttach Servo Integer} 
+#define SERVO_ATTACH		40
+// {servoDetach Servo} 
+#define SERVO_DETACH		41
+// {servoEventsEnabled Servo} 
+#define SERVO_EVENTS_ENABLED		42
+// {servoSweepStart Servo} 
+#define SERVO_SWEEP_START		43
+// {servoSweepStop Servo} 
+#define SERVO_SWEEP_STOP		44
+// {servoWrite Servo} 
+#define SERVO_WRITE		45
+// {servoWriteMicroseconds Servo} 
+#define SERVO_WRITE_MICROSECONDS		46
+// {setDebounce int} 
+#define SET_DEBOUNCE		47
+// {setDebug boolean} 
+#define SET_DEBUG		48
+// {setDigitalTriggerOnly Boolean} 
+#define SET_DIGITAL_TRIGGER_ONLY		49
+// {setLoadTimingEnabled boolean} 
+#define SET_LOAD_TIMING_ENABLED		50
+// {setPWMFrequency Integer Integer} 
+#define SET_PWMFREQUENCY		51
+// {setSampleRate int} 
+#define SET_SAMPLE_RATE		52
+// {setSerialRate int} 
+#define SET_SERIAL_RATE		53
+// {setServoSpeed Servo} 
+#define SET_SERVO_SPEED		54
+// {setTrigger int int int} 
+#define SET_TRIGGER		55
+// {softReset} 
+#define SOFT_RESET		56
 ///// INO GENERATED DEFINITION END //////
 
-// TODO: this wasn't defined?!
-#define ADD_SENSOR_DATA_LISTENER 55
-#define PUBLISH_ATTACHED_DEVICE 56
 // ----- MRLCOMM FUNCTION GENERATED INTERFACE END -----------
+
+///// INO GENERATED DEFINITION END //////
+
+
 
 // FIXME  - remove AF DEFINES
 // Start of Adafruit16CServoDriver defines
@@ -472,14 +479,17 @@ void LinkedList<T>::clear() {
 // and defined in org.myrobotlab.service.interface.Device
 // These values "must" align with the Device class
 // TODO - find a way to auto sync this
-#define SENSOR_TYPE_ANALOG_PIN_ARRAY  	0
-#define SENSOR_TYPE_DIGITAL_PIN_ARRAY  	1
-#define SENSOR_TYPE_PULSE  				2
-#define SENSOR_TYPE_ULTRASONIC  		3
+// Device types start as 1 - so if anyone forgot to
+// define their device it will error - rather default
+// to a device they may not want
+#define SENSOR_TYPE_ANALOG_PIN_ARRAY  	1
+#define SENSOR_TYPE_DIGITAL_PIN_ARRAY  	2
+#define SENSOR_TYPE_PULSE  				3
+#define SENSOR_TYPE_ULTRASONIC  		4
 
-#define DEVICE_TYPE_STEPPER  			4
-#define DEVICE_TYPE_MOTOR  				5
-#define DEVICE_TYPE_SERVO  				6
+#define DEVICE_TYPE_STEPPER  			5
+#define DEVICE_TYPE_MOTOR  				6
+#define DEVICE_TYPE_SERVO  				7
 // GLOBAL DEVICE TYPES END
 // ==============================================
 
@@ -493,10 +503,24 @@ void LinkedList<T>::clear() {
 #define ECHO_STATE_GOOD_RANGE 6
 #define ECHO_STATE_TIMEOUT  7
 
-int msgSize = 0; // the NUM_BYTES of current message
-unsigned int debounceDelay = 50; // in ms
-byte msgBuf[64];
+/***********************************************************************
+ * BOARD TYPE
+*/
+#define BOARD_TYPE_UNKNOW 0
+#define BOARD_TYPE_MEGA 1
+#define BOARD_TYPE_UNO 2
 
+#if defined(ARDUINO_AVR_MEGA2560)
+  #define BOARD BOARD_TYPE_MEGA
+#elif defined(ARDUINO_AVR_UNO)
+  #define BOARD BOARD_TYPE_UNO
+#else
+  #define BOARD BOARD_TYPE_UNKNOW
+#endif
+
+/***********************************************************************
+ * DEVICE TYPE
+*/
 typedef struct {
   // general
   int type; // might be useful in control
@@ -516,7 +540,9 @@ typedef struct {
   int rateModulus;
 }  pin_type;
 
-
+/***********************************************************************
+ * DEVICE TYPE
+*/
 typedef struct {
   int index; // the all important index of the sensor - equivalent to the "name" - used in callbacks
   int state; // state - single at the moment to handle all the finite states of the sensor
@@ -545,6 +571,16 @@ typedef struct {
   int count;
 } device_type;
 
+/***********************************************************************
+ * GLOBAL VARIABLES
+ * TODO - work on reducing globals and pass as parameters
+*/
+
+int msgSize = 0; // the NUM_BYTES of current message
+unsigned int debounceDelay = 50; // in ms
+byte msgBuf[64];
+
+
 LinkedList<device_type> deviceList;
 // device_type* deviceList[MAX_DEVICES];
 
@@ -553,7 +589,6 @@ unsigned long lastMicros = 0;
 int byteCount = 0;
 unsigned char newByte = 0;
 unsigned char ioCmd[64];  // message buffer for all inbound messages
-//int readValue; not used anywhere
 
 // FIXME - normalize with sampleRate ..
 int loadTimingModulus = 1000;
@@ -567,12 +602,25 @@ unsigned int sampleRate = 1; // 1 - 65,535 modulus of the loopcount - allowing y
 
 // define any functions that pass structs into them.
 void sendServoEvent(device_type& s, int eventType);
-//void handlePulseType(pin_type& pin); //not defined anywhere
-// sensor handlers
-// void handleUltrasonic(device_type& d);
+
 
 bool debug = false;
 
+/***********************************************************************
+ * DEVICE LIST ACCESS METHODS BEGIN
+ * basic crud operations for devices to seperate the implementation
+ * details of the data structure containing all the devices
+ */
+device_type* getDevice(unsigned long id);
+void removeDevice(unsigned long id);
+void addDevice(device_type*);
+/**
+ * DEVICE LIST ACCESS METHODS END
+ **********************************************************************/
+
+/***********************************************************************
+ * STANDARD ARDUINO BEGIN
+*/
 void setup() {
   Serial.begin(115200);        // connect to the serial port
   while (!Serial){};
@@ -594,9 +642,27 @@ void loop() {
   }
   // update devices
   updateDevices();
-  // update and report timing metrics
-  updateStats();
+  // update memory & timing
+  updateStatus();
 } // end of big loop
+
+/**
+ * STANDARD ARDUINO END
+**********************************************************************/
+
+/***********************************************************************
+ * UTILITY METHODS BEGIN
+ */
+unsigned long toUnsignedLongfromBigEndian(unsigned char* buffer, int start) {
+  return (((unsigned long)buffer[start] << 24) + ((unsigned long)buffer[start + 1] << 16) + (buffer[start + 2] << 8) + buffer[start + 3]);
+}
+
+int getFreeRam() 
+{
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
 
 void softReset() {
   int size = deviceList.size();
@@ -617,27 +683,18 @@ void softReset() {
   debounceDelay = 50;
 }
 
-// ============= device access methods begin =============================
-// basic crud operations for devices to seperate the implementation
-// details of the data structure containing all the devices
-device_type* getDevice(unsigned long id);
-void removeDevice(unsigned long id);
-void addDevice(device_type*);
-// ============= device access methods end ===============================
+/**
+ * UTILITY METHODS END
+ ***********************************************************************/
 
-
-// ============= utility methods begin ===============================
-unsigned long toUnsignedLongfromBigEndian(unsigned char* buffer, int start) {
-  return (((unsigned long)buffer[start] << 24) + ((unsigned long)buffer[start + 1] << 16) + (buffer[start + 2] << 8) + buffer[start + 3]);
-}
-// ============= utility methods end ===============================
-
-// ============= serial methods begin ===============================
+/***********************************************************************
+ * SERIAL METHODS BEGIN
+ */
 bool getCommand() {
   // handle serial data begin
   int bytesAvailable = Serial.available();
   if (bytesAvailable > 0) {
-    publishDebug("RXBUFF:" + String(bytesAvailable));
+    publishDebug(F("RXBUFF:" + String(bytesAvailable)));
     // now we should loop over the available bytes .. not just read one by one.
     for (int i = 0 ; i < bytesAvailable; i++) {
       // read the incoming byte:
@@ -811,10 +868,12 @@ void processCommand() {
   byteCount = 0;
 } // process Command
 
-// ============= serial methods end ===============================
-
-
 /**
+ * SERIAL METHODS END
+ **********************************************************************/
+
+/***********************************************************************
+ * UPDATE DEVICES BEGIN
  * updateDevices updates each type of device put on the device list
  * depending on their type.
  */
@@ -851,9 +910,17 @@ void updateDevices() {
   } // end for each pin
 }
 
-// This function updates how long it took to run this loop
-// and reports it back to the serial port if desired.
-void updateStats() {
+/**
+ * UPDATE DEVICES END
+ **********************************************************************/
+/**
+ * This function updates how long it took to run this loop
+ * and reports it back to the serial port if desired.
+ *
+ * TODO - find the average between sending vs a single sample
+ * TODO - let the user set loadTimingModulus with Hz input
+ */
+void updateStatus() {
   // FIXME - fix overflow with getDiff() method !!!
   unsigned long now = micros();
   loadTime = now - lastMicros; // avg outside
@@ -861,7 +928,7 @@ void updateStats() {
   // report load time
   if (loadTimingEnabled && (loopCount%loadTimingModulus == 0)) {
     // send it
-    publishLoadTimingEvent(loadTime);
+    publishStatus(loadTime, getFreeRam());
   }
 }
 
@@ -1401,15 +1468,22 @@ void publishVersion() {
   Serial.flush();
 }
 
-void publishLoadTimingEvent(unsigned long loadTime) {
+
+void publishStatus(unsigned long loadTime, int freeMemory) {
   Serial.write(MAGIC_NUMBER);
-  Serial.write(5); // size 1 FN + 4 bytes of unsigned long
-  Serial.write(PUBLISH_LOAD_TIMING_EVENT);
+  Serial.write(7); // size 1 FN + 4 bytes of unsigned long
+  Serial.write(PUBLISH_STATUS);
+  
   // write the long value out
   Serial.write((byte)(loadTime >> 24));
   Serial.write((byte)(loadTime >> 16));
   Serial.write((byte)(loadTime >> 8));
   Serial.write((byte)loadTime & 0xff);
+  
+  // write the int value out
+  Serial.write((byte)(freeMemory >> 8));
+  Serial.write((byte)freeMemory & 0xff);
+  
   Serial.flush();
 }
 
