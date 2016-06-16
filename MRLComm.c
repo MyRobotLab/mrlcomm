@@ -44,6 +44,7 @@
 *  TODO - getBoardInfo() - returns board info !
 *  TODO - getPinInfo() - returns pin info !
 *  TODO - implement with std::vector vs linked list - https://github.com/maniacbug/StandardCplusplus/blob/master/README.md
+*  TODO - make MRLComm a c++ library
 */
 
 // Included as a 3rd party arduino library from here: https://github.com/ivanseidel/LinkedList/
@@ -441,25 +442,6 @@ void LinkedList<T>::clear() {
 
 ///// INO GENERATED DEFINITION END //////
 
-
-
-// FIXME  - remove AF DEFINES
-// Start of Adafruit16CServoDriver defines
-// FIXME : MOVING AF_BEGIN to 70 for some room to not collide with the bindings generator
-// Mats has said he will convert to I2C reads and writes and these will be removed...
-
-#define AF_BEGIN 70
-#define AF_SET_PWM_FREQ 71
-#define AF_SET_PWM 72
-#define AF_SET_SERVO 73
-
-#define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
-#define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
-#define PCA9685_MODE1 0x0
-#define PCA9685_PRESCALE 0xFE
-#define LED0_ON_L 0x6
-// End of Adafruit16CServoDriver defines
-
 // servo event types
 // ===== published sub-types based on device type begin ===
 #define  SERVO_EVENT_STOPPED          1
@@ -473,42 +455,47 @@ void LinkedList<T>::clear() {
 #define ERROR_DOES_NOT_EXIST    4
 #define ERROR_UNKOWN_SENSOR     5
 
-// ==============================================
-// GLOBAL DEVICE TYPES BEGIN
-// THESE ARE MICROCONTROLLER AGNOSTIC !
-// and defined in org.myrobotlab.service.interface.Device
-// These values "must" align with the Device class
-// TODO - find a way to auto sync this
-// Device types start as 1 - so if anyone forgot to
-// define their device it will error - rather default
-// to a device they may not want
+/***********************************************************************
+* GLOBAL DEVICE TYPES BEGIN
+* THESE ARE MICROCONTROLLER AGNOSTIC !
+* and defined in org.myrobotlab.service.interface.Device
+* These values "must" align with the Device class
+* TODO - find a way to auto sync this with Device from Java-land
+* TODO - should be in seperate generated file
+* Device types start as 1 - so if anyone forgot to
+* define their device it will error - rather default
+* to a device they may not want
+*/
+
 #define SENSOR_TYPE_ANALOG_PIN_ARRAY  	1
 #define SENSOR_TYPE_DIGITAL_PIN_ARRAY  	2
-#define SENSOR_TYPE_PULSE  				3
-#define SENSOR_TYPE_ULTRASONIC  		4
+#define SENSOR_TYPE_PULSE  				      3
+#define SENSOR_TYPE_ULTRASONIC  		    4
+#define SENSOR_TYPE_I2C                 5
 
-#define DEVICE_TYPE_STEPPER  			5
-#define DEVICE_TYPE_MOTOR  				6
-#define DEVICE_TYPE_SERVO  				7
-// GLOBAL DEVICE TYPES END
-// ==============================================
-
+#define DEVICE_TYPE_STEPPER  			      6
+#define DEVICE_TYPE_MOTOR  				      7
+#define DEVICE_TYPE_SERVO  				      8
+#define DEVICE_TYPE_I2C                 9
+/**
+* GLOBAL DEVICE TYPES END
+**********************************************************************/
 
 // ECHO FINITE STATE MACHINE - NON BLOCKING PULSIN
-#define ECHO_STATE_START 1
-#define ECHO_STATE_TRIG_PULSE_BEGIN 2
-#define ECHO_STATE_TRIG_PULSE_END 3
-#define ECHO_STATE_MIN_PAUSE_PRE_LISTENING 4
-#define ECHO_STATE_LISTENING 5
-#define ECHO_STATE_GOOD_RANGE 6
-#define ECHO_STATE_TIMEOUT  7
+#define ECHO_STATE_START                    1
+#define ECHO_STATE_TRIG_PULSE_BEGIN         2
+#define ECHO_STATE_TRIG_PULSE_END           3
+#define ECHO_STATE_MIN_PAUSE_PRE_LISTENING  4
+#define ECHO_STATE_LISTENING                5
+#define ECHO_STATE_GOOD_RANGE               6
+#define ECHO_STATE_TIMEOUT                  7
 
 /***********************************************************************
  * BOARD TYPE
 */
 #define BOARD_TYPE_UNKNOW 0
-#define BOARD_TYPE_MEGA 1
-#define BOARD_TYPE_UNO 2
+#define BOARD_TYPE_MEGA   1
+#define BOARD_TYPE_UNO    2
 
 #if defined(ARDUINO_AVR_MEGA2560)
   #define BOARD BOARD_TYPE_MEGA
@@ -519,7 +506,7 @@ void LinkedList<T>::clear() {
 #endif
 
 /***********************************************************************
- * DEVICE TYPE
+ * PIN TYPE
 */
 typedef struct {
   // general
@@ -580,6 +567,8 @@ int msgSize = 0; // the NUM_BYTES of current message
 unsigned int debounceDelay = 50; // in ms
 byte msgBuf[64];
 
+// Switch to know it the i2c bus has been initiated or not
+boolean i2cInitiated = false;
 
 LinkedList<device_type> deviceList;
 // device_type* deviceList[MAX_DEVICES];
@@ -654,7 +643,9 @@ void loop() {
  * UTILITY METHODS BEGIN
  */
 unsigned long toUnsignedLongfromBigEndian(unsigned char* buffer, int start) {
-  return (((unsigned long)buffer[start] << 24) + ((unsigned long)buffer[start + 1] << 16) + (buffer[start + 2] << 8) + buffer[start + 3]);
+  return (((unsigned long)buffer[start] << 24) + 
+          ((unsigned long)buffer[start + 1] << 16) + 
+          (buffer[start + 2] << 8) + buffer[start + 3]);
 }
 
 int getFreeRam() 
@@ -689,12 +680,13 @@ void softReset() {
 
 /***********************************************************************
  * SERIAL METHODS BEGIN
+ * TODO - add text api
  */
 bool getCommand() {
   // handle serial data begin
   int bytesAvailable = Serial.available();
   if (bytesAvailable > 0) {
-    publishDebug(F("RXBUFF:" + String(bytesAvailable)));
+    publishDebug("RXBUFF:" + String(bytesAvailable));
     // now we should loop over the available bytes .. not just read one by one.
     for (int i = 0 ; i < bytesAvailable; i++) {
       // read the incoming byte:
@@ -827,19 +819,6 @@ void processCommand() {
   case SENSOR_POLLING_STOP:
     sensorPollingStop();
     break;
-  // Start of Adafruit16CServoDriver commands
-  case AF_BEGIN:
-    afBegin();
-    break;
-  case AF_SET_PWM_FREQ:
-    afSetPWMFREQ();
-    break;
-  case AF_SET_PWM:
-    afSetPWM();
-    break;
-  case AF_SET_SERVO:
-    afSetServo();
-    break;
   // Start of i2c read and writes
   case I2C_READ:
     i2cRead();
@@ -873,66 +852,9 @@ void processCommand() {
  **********************************************************************/
 
 /***********************************************************************
- * UPDATE DEVICES BEGIN
- * updateDevices updates each type of device put on the device list
- * depending on their type.
+ * CONTROL METHODS BEGIN
+ * TODO - add text api
  */
-void updateDevices() {
-  // this is the update devices method..
-  // iterate through our list of sensors
-  for (int i = 0; i < deviceList.size(); i++) {
-    device_type device = deviceList.get(i);
-    switch (device.type) {
-      case SENSOR_TYPE_ANALOG_PIN_ARRAY: {
-    	  updateAnalogPinArray(device);
-        break;
-      }
-      case SENSOR_TYPE_DIGITAL_PIN_ARRAY: {
-    	  updateDigitalPinArray(device);
-        break;
-      }
-      case SENSOR_TYPE_ULTRASONIC: {
-    	  updateUltrasonic(device);
-        break;
-      }
-      case SENSOR_TYPE_PULSE: {
-        updatePulse(device);
-        break;
-      }
-      case DEVICE_TYPE_SERVO: {
-    	  updateServo(device);
-        break;
-      }
-      default:
-        sendError(ERROR_UNKOWN_SENSOR);
-        break;
-    } // end switch(sensor.type)
-  } // end for each pin
-}
-
-/**
- * UPDATE DEVICES END
- **********************************************************************/
-/**
- * This function updates how long it took to run this loop
- * and reports it back to the serial port if desired.
- *
- * TODO - find the average between sending vs a single sample
- * TODO - let the user set loadTimingModulus with Hz input
- */
-void updateStatus() {
-  // FIXME - fix overflow with getDiff() method !!!
-  unsigned long now = micros();
-  loadTime = now - lastMicros; // avg outside
-  lastMicros = now;
-  // report load time
-  if (loadTimingEnabled && (loopCount%loadTimingModulus == 0)) {
-    // send it
-    publishStatus(loadTime, getFreeRam());
-  }
-}
-
-// ==================== control methods begin ========================
 
 void sensorPollingStart() {
   // TODO: implement me.
@@ -942,37 +864,9 @@ void sensorPollingStop() {
   // TODO: implement me.
 }
 
-// Start of Adafruit16CServoDriver methods
-// I2C write
-void write8(uint8_t i2caddr, uint8_t addr, uint8_t d) {
-  WIRE.beginTransmission(i2caddr);
-  WIRE.write(addr);
-  WIRE.write(d);
-  WIRE.endTransmission();
-}
-
-// I2C Read
-uint8_t read8(uint8_t i2caddr, uint8_t addr) {
-  WIRE.beginTransmission(i2caddr);
-  WIRE.write(addr);
-  WIRE.endTransmission();
-  WIRE.requestFrom((uint8_t)i2caddr, (uint8_t)1);
-  return WIRE.read();
-}
-
-void setPWM(uint8_t i2caddr, uint8_t num, uint16_t on, uint16_t off) {
-  WIRE.beginTransmission(i2caddr);
-  WIRE.write(LED0_ON_L+4*num);
-  WIRE.write(on);
-  WIRE.write(on>>8);
-  WIRE.write(off);
-  WIRE.write(off>>8);
-  WIRE.endTransmission();
-}
-// End of Adafruit16CServoDriver methods
-
 // Start of I2CControl interface methods
 void i2cRead(){
+  wireBegin();
   WIRE.beginTransmission(ioCmd[1]); // address to the i2c device
   WIRE.write(ioCmd[2]);             // device memory address to read from
   WIRE.endTransmission();
@@ -991,6 +885,7 @@ void i2cRead(){
 }
 
 void i2cWrite(){
+  wireBegin();
   WIRE.beginTransmission(ioCmd[1]);   // address to the i2c device
   WIRE.write(ioCmd[2]);               // device memory address to write to
   for (int i = 3; i < msgSize; i++) { // data to write
@@ -1000,6 +895,13 @@ void i2cWrite(){
 }
 
 void i2cWriteRead(){
+  /** TODO implement me */
+}
+void wireBegin() {
+  if (!i2cInitiated){
+    WIRE.begin(); //not sure if it's good to be able to initialize the WIRE library multiple time 
+    i2cInitiated = true;
+  }
 }
 // End of I2CControl interface methods
 
@@ -1008,64 +910,6 @@ void i2cWriteRead(){
 void getVersion() {
   // call publish version to talk to the serial port.
   publishVersion();
-}
-
-// SERVO_ATTACH
-void servoAttach() {
-  device_type s = deviceList.get(ioCmd[1]);
-  s.index = ioCmd[1];
-  if (s.servo == NULL) {
-    s.servo = new Servo();
-  }
-  s.servo->attach(ioCmd[2]);
-  s.step = 1;
-  s.eventsEnabled = false;
-}
-
-// SERVO_START_SWEEP
-void servoStartSweep() {
-  device_type s = deviceList.get(ioCmd[1]);
-  s.min = ioCmd[2];
-  s.max = ioCmd[3];
-  s.step = ioCmd[4];
-  s.isMoving = true;
-  s.isSweeping = true;
-}
-
-// SERVO_STOP_SWEEP
-void servoStopSweep() {
-  device_type s = deviceList.get(ioCmd[1]);
-  s.isMoving = false;
-  s.isSweeping = false;
-}
-
-// SERVO_EVENTS_ENABLED
-void servoEventsEnabled() {
-  // Not implemented.
-}
-
-// SERVO_WRITE
-void servoWrite() {
-  device_type s = deviceList.get(ioCmd[1]);
-  if (s.speed == 100 && s.servo != 0) {
-    // move at regular/full 100% speed
-    s.targetPos = ioCmd[2];
-    s.currentPos = ioCmd[2];
-    s.isMoving = false;
-    s.servo->write(ioCmd[2]);
-    if (s.eventsEnabled)
-      sendServoEvent(s, SERVO_EVENT_STOPPED);
-  } else if (s.speed < 100 && s.speed > 0) {
-    s.targetPos = ioCmd[2];
-    s.isMoving = true;
-  }
-}
-
-// PUBLISH_SERVO_EVENT
-// FIXME - should be using PUBLISH_SENSOR_DATA
-void publishServoEvent() {
-  device_type s = deviceList.get(ioCmd[1]);
-  s.eventsEnabled = ioCmd[2];
 }
 
 // SERVO_WRITE_MICROSECONDS
@@ -1247,45 +1091,136 @@ void setSampleRate() {
   } // avoid /0 error - FIXME - time estimate param
 }
 
-// Adafruit commands
-// AF_BEGIN
-void afBegin() {
-  WIRE.begin(); //not sure if it's good to be able to initialize the WIRE library multiple time 
-  write8(ioCmd[1],PCA9685_MODE1, 0x0);
+// SERVO_START_SWEEP
+void servoStartSweep() {
+  device_type s = deviceList.get(ioCmd[1]);
+  s.min = ioCmd[2];
+  s.max = ioCmd[3];
+  s.step = ioCmd[4];
+  s.isMoving = true;
+  s.isSweeping = true;
 }
 
-// AF_SET_PWM_FREQ
-void afSetPWMFREQ() {
-  //ioCmd[1] is the I2C address
-  //ioCmd[2] is the freqency value
-  int freq = 0.9 * ioCmd[2];  // Correct for overshoot in the frequency setting (see issue #11).
-  float prescaleval = 25000000;
-  prescaleval /= 4096;
-  prescaleval /= freq;
-  prescaleval -= 1;
-  uint8_t prescale = floor(prescaleval + 0.5);
-  uint8_t oldmode = read8(ioCmd[1],PCA9685_MODE1);
-  uint8_t newmode = (oldmode&0x7F) | 0x10; // sleep
-  write8(ioCmd[1],PCA9685_MODE1, newmode); // go to sleep
-  write8(ioCmd[1],PCA9685_PRESCALE, prescale); // set the prescaler
-  write8(ioCmd[1],PCA9685_MODE1, oldmode);
-  delay(5);
-  write8(ioCmd[1],PCA9685_MODE1, oldmode | 0xa1);  //  This sets the MODE1 register to turn on auto increment.
-  // This is why the beginTransmission below was not working.
+// SERVO_STOP_SWEEP
+void servoStopSweep() {
+  device_type s = deviceList.get(ioCmd[1]);
+  s.isMoving = false;
+  s.isSweeping = false;
 }
 
-// AF_SET_PWM
-void afSetPWM() {
-  setPWM(ioCmd[1], ioCmd[2], ioCmd[3], ioCmd[4]);
+// SERVO_EVENTS_ENABLED
+void servoEventsEnabled() {
+  // Not implemented.
 }
 
-// AF_SET_SERVO
-void afSetServo() {
-  setPWM(ioCmd[1], ioCmd[2], 0, (ioCmd[3] << 8) + ioCmd[4]);
+// SERVO_WRITE
+void servoWrite() {
+  device_type s = deviceList.get(ioCmd[1]);
+  if (s.speed == 100 && s.servo != 0) {
+    // move at regular/full 100% speed
+    s.targetPos = ioCmd[2];
+    s.currentPos = ioCmd[2];
+    s.isMoving = false;
+    s.servo->write(ioCmd[2]);
+    if (s.eventsEnabled)
+      sendServoEvent(s, SERVO_EVENT_STOPPED);
+  } else if (s.speed < 100 && s.speed > 0) {
+    s.targetPos = ioCmd[2];
+    s.isMoving = true;
+  }
+}
+
+/**
+ * CONTROL METHODS END
+ **********************************************************************/
+
+/***********************************************************************
+ * UPDATE DEVICES BEGIN
+ * updateDevices updates each type of device put on the device list
+ * depending on their type.
+ * This method processes each loop. Typically this "back-end"
+ * processing will read data from pins, or change states of non-blocking
+ * pulses, or possibly regulate a motor based on pid values read from
+ * pins
+ */
+void updateDevices() {
+  // this is the update devices method..
+  // iterate through our list of sensors
+  for (int i = 0; i < deviceList.size(); i++) {
+    device_type device = deviceList.get(i);
+    switch (device.type) {
+      case SENSOR_TYPE_ANALOG_PIN_ARRAY: {
+    	  updateAnalogPinArray(device);
+        break;
+      }
+      case SENSOR_TYPE_DIGITAL_PIN_ARRAY: {
+    	  updateDigitalPinArray(device);
+        break;
+      }
+      case SENSOR_TYPE_ULTRASONIC: {
+    	  updateUltrasonic(device);
+        break;
+      }
+      case SENSOR_TYPE_PULSE: {
+        updatePulse(device);
+        break;
+      }
+      case DEVICE_TYPE_SERVO: {
+    	  updateServo(device);
+        break;
+      }
+      default:
+        sendError(ERROR_UNKOWN_SENSOR);
+        break;
+    } // end switch(sensor.type)
+  } // end for each pin
+}
+
+/**
+ * UPDATE DEVICES END
+ **********************************************************************/
+/**
+ * This function updates how long it took to run this loop
+ * and reports it back to the serial port if desired.
+ *
+ * TODO - find the average between sending vs a single sample
+ * TODO - let the user set loadTimingModulus with Hz input
+ */
+void updateStatus() {
+  // FIXME - fix overflow with getDiff() method !!!
+  unsigned long now = micros();
+  loadTime = now - lastMicros; // avg outside
+  lastMicros = now;
+  // report load time
+  if (loadTimingEnabled && (loopCount%loadTimingModulus == 0)) {
+    // send it
+    publishStatus(loadTime, getFreeRam());
+  }
 }
 
 
-// ==================== control methods end ========================
+// SERVO_ATTACH
+void servoAttach() {
+  device_type s = deviceList.get(ioCmd[1]);
+  s.index = ioCmd[1];
+  if (s.servo == NULL) {
+    s.servo = new Servo();
+  }
+  s.servo->attach(ioCmd[2]);
+  s.step = 1;
+  s.eventsEnabled = false;
+}
+
+
+
+// PUBLISH_SERVO_EVENT
+// FIXME - should be using PUBLISH_SENSOR_DATA
+void publishServoEvent() {
+  device_type s = deviceList.get(ioCmd[1]);
+  s.eventsEnabled = ioCmd[2];
+}
+
+
 
 // ============== attach methods begin =======================
 // MSG STRUCTURE
