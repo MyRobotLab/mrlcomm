@@ -910,6 +910,9 @@ public class Arduino extends Service implements Microcontroller, I2CControl, Ser
 			invoke("publishStatus", new MrlCommStatus(microsPerLoop, freeMemory));
 			break;
 		}
+		
+		// TODO - REMOVE - this needs to be routed through
+		// PUBLISH_SENSOR_DATA and processed in Servo service !
 		case PUBLISH_SERVO_EVENT: {
 			int index = message[1];
 			int eventType = message[2];
@@ -1380,6 +1383,29 @@ public class Arduino extends Service implements Microcontroller, I2CControl, Ser
 
 		sendMsg(ATTACH_DEVICE, msgParms);
 
+	}
+
+	/**
+	 * sensorPollingStart begins general device read "polling".
+	 * It puts the device in a reading state.  Its not really applicable 
+	 * to poll a Pin this way as it refers to the "Device" level not the Pin.
+	 * 
+	 * Putting a PinArray device into reading state might be a global setting
+	 * to turn on all polling pins
+	 * 
+	 * @param deviceIndex
+	 */
+	public void sensorPollingStart(Integer deviceIndex){
+		// FIXME - implement
+	}
+	
+	/**
+	 * Stops the "Device" from polling - puts the device into a non-reading state
+	 * @param deviceIndex
+	 */
+	
+	public void sensorPollingStop(Integer deviceIndex){
+		// FIXME - implement
 	}
 
 	/**

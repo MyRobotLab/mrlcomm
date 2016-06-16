@@ -106,6 +106,8 @@ public class ArduinoMsgCodec extends Codec implements Serializable {
 	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.PULSE;
 	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.PULSE_STOP;
 	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.RELEASE_DEVICE;
+	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.SENSOR_POLLING_START;
+	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.SENSOR_POLLING_STOP;
 	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.SERVO_ATTACH;
 	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.SERVO_DETACH;
 	import static org.myrobotlab.codec.serial.ArduinoMsgCodec.SERVO_EVENTS_ENABLED;
@@ -178,7 +180,7 @@ public class ArduinoMsgCodec extends Codec implements Serializable {
 	// {intsToString int[] int int} 
 	public final static int INTS_TO_STRING =		17;
 
-	// {motorAttach MotorControl int} 
+	// {motorAttach String int} 
 	public final static int MOTOR_ATTACH =		18;
 
 	// {motorDetach MotorControl} 
@@ -238,56 +240,62 @@ public class ArduinoMsgCodec extends Codec implements Serializable {
 	// {releaseDevice int int} 
 	public final static int RELEASE_DEVICE =		37;
 
+	// {sensorPollingStart Integer} 
+	public final static int SENSOR_POLLING_START =		38;
+
+	// {sensorPollingStop Integer} 
+	public final static int SENSOR_POLLING_STOP =		39;
+
 	// {servoAttach Servo Integer} 
-	public final static int SERVO_ATTACH =		38;
+	public final static int SERVO_ATTACH =		40;
 
 	// {servoDetach Servo} 
-	public final static int SERVO_DETACH =		39;
+	public final static int SERVO_DETACH =		41;
 
 	// {servoEventsEnabled Servo} 
-	public final static int SERVO_EVENTS_ENABLED =		40;
+	public final static int SERVO_EVENTS_ENABLED =		42;
 
 	// {servoSweepStart Servo} 
-	public final static int SERVO_SWEEP_START =		41;
+	public final static int SERVO_SWEEP_START =		43;
 
 	// {servoSweepStop Servo} 
-	public final static int SERVO_SWEEP_STOP =		42;
+	public final static int SERVO_SWEEP_STOP =		44;
 
 	// {servoWrite Servo} 
-	public final static int SERVO_WRITE =		43;
+	public final static int SERVO_WRITE =		45;
 
 	// {servoWriteMicroseconds Servo} 
-	public final static int SERVO_WRITE_MICROSECONDS =		44;
+	public final static int SERVO_WRITE_MICROSECONDS =		46;
 
 	// {setDebounce int} 
-	public final static int SET_DEBOUNCE =		45;
+	public final static int SET_DEBOUNCE =		47;
 
 	// {setDebug boolean} 
-	public final static int SET_DEBUG =		46;
+	public final static int SET_DEBUG =		48;
 
 	// {setDigitalTriggerOnly Boolean} 
-	public final static int SET_DIGITAL_TRIGGER_ONLY =		47;
+	public final static int SET_DIGITAL_TRIGGER_ONLY =		49;
 
 	// {setLoadTimingEnabled boolean} 
-	public final static int SET_LOAD_TIMING_ENABLED =		48;
+	public final static int SET_LOAD_TIMING_ENABLED =		50;
 
 	// {setPWMFrequency Integer Integer} 
-	public final static int SET_PWMFREQUENCY =		49;
+	public final static int SET_PWMFREQUENCY =		51;
 
 	// {setSampleRate int} 
-	public final static int SET_SAMPLE_RATE =		50;
+	public final static int SET_SAMPLE_RATE =		52;
 
 	// {setSerialRate int} 
-	public final static int SET_SERIAL_RATE =		51;
+	public final static int SET_SERIAL_RATE =		53;
 
 	// {setServoSpeed Servo} 
-	public final static int SET_SERVO_SPEED =		52;
+	public final static int SET_SERVO_SPEED =		54;
 
 	// {setTrigger int int int} 
-	public final static int SET_TRIGGER =		53;
+	public final static int SET_TRIGGER =		55;
 
 	// {softReset} 
-	public final static int SOFT_RESET =		54;
+	public final static int SOFT_RESET =		56;
 
 
   static {
@@ -401,6 +409,12 @@ public class ArduinoMsgCodec extends Codec implements Serializable {
 
 		byteToMethod.put(RELEASE_DEVICE,"releaseDevice");
 		methodToByte.put("releaseDevice",RELEASE_DEVICE);
+
+		byteToMethod.put(SENSOR_POLLING_START,"sensorPollingStart");
+		methodToByte.put("sensorPollingStart",SENSOR_POLLING_START);
+
+		byteToMethod.put(SENSOR_POLLING_STOP,"sensorPollingStop");
+		methodToByte.put("sensorPollingStop",SENSOR_POLLING_STOP);
 
 		byteToMethod.put(SERVO_ATTACH,"servoAttach");
 		methodToByte.put("servoAttach",SERVO_ATTACH);
@@ -784,6 +798,14 @@ public class ArduinoMsgCodec extends Codec implements Serializable {
 	}
 	case ArduinoMsgCodec.RELEASE_DEVICE:{
 		return "RELEASE_DEVICE";
+
+	}
+	case ArduinoMsgCodec.SENSOR_POLLING_START:{
+		return "SENSOR_POLLING_START";
+
+	}
+	case ArduinoMsgCodec.SENSOR_POLLING_STOP:{
+		return "SENSOR_POLLING_STOP";
 
 	}
 	case ArduinoMsgCodec.SERVO_ATTACH:{
