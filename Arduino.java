@@ -332,7 +332,9 @@ public class Arduino extends Service implements Microcontroller, I2CControl, Ser
 	int msgSize;
 
 	transient int[] msg = new int[MAX_MSG_SIZE];
-
+  // i2c  
+	boolean i2cDataReturned = false;
+	
 	// parameters for testing the getVersion retry stuff.
 	// TODO: some way to do this more synchronously
 	// perhaps when we connect to the serial port, MRLComm can just have the
@@ -1987,15 +1989,42 @@ public class Arduino extends Service implements Microcontroller, I2CControl, Ser
 	}
 
 	@Override
-	public void i2cWrite(int busAddress, int deviceAddress, byte[] buffer, int size) {
-		// TODO Auto-generated method stub
-
+  	public void i2cWrite(int busAddress, int deviceAddress, byte[] buffer, int size) {
+    int msgBuffer[] = new int[size+1];
+    msgBuffer[0] = deviceAddress;
+    for (int i=0 ; i < size ; i++){
+    	msgBuffer[i+1] = (int)buffer[i] & 0xFF;
+    }
+		sendMsg(I2C_WRITE,msgBuffer);
 	}
 
 	@Override
 	public int i2cRead(int busAddress, int deviceAddress, byte[] buffer, int size) {
-		// TODO Auto-generated method stub
-		return 0;
+		sendMsg(I2C_READ, deviceAddress, size);
+		int retry = 0;
+		int retryMax = 1000;
+		try {
+			/**
+			 * We will wait up to retryMax times to get the i2c data back from
+			 * MRLComm.c and wait 1 ms between each try. A blocking queue is
+			 * not needed, as this is only a single data element - and blocking
+			 * is not necessary. 
+			 */
+			while ((retry < retryMax) && (!i2cDataReturned)) {
+				sleep(1);
+				++retry;
+			}
+		} catch (Exception e) {
+			Logging.logError(e);
+		}
+		if (i2cDataReturned) {
+			// TODO Implement me
+		  // Return the data in buffer[]
+			// Return the size of the data or -1 in case of an error
+			return size;
+		}
+		// Time out, no data returned
+		return -1;
 	}
 
 	@Override
