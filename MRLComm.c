@@ -9,6 +9,7 @@
 * GroG
 * Kwatters
 * Mats
+* calamity
 * and many others...
 *
 * MRL Protocol definition
@@ -442,6 +443,10 @@ void LinkedList<T>::clear() {
 
 ///// INO GENERATED DEFINITION END //////
 
+// TODO: the max message size isn't auto generated but 
+// it is in ArduinioMsgCodec
+#define MAX_MSG_SIZE 64
+
 // servo event types
 // ===== published sub-types based on device type begin ===
 #define  SERVO_EVENT_STOPPED          1
@@ -493,16 +498,16 @@ void LinkedList<T>::clear() {
 /***********************************************************************
  * BOARD TYPE
 */
-#define BOARD_TYPE_UNKNOW 0
-#define BOARD_TYPE_MEGA   1
-#define BOARD_TYPE_UNO    2
+#define BOARD_TYPE_UNKNOWN 0
+#define BOARD_TYPE_MEGA    1
+#define BOARD_TYPE_UNO     2
 
 #if defined(ARDUINO_AVR_MEGA2560)
   #define BOARD BOARD_TYPE_MEGA
 #elif defined(ARDUINO_AVR_UNO)
   #define BOARD BOARD_TYPE_UNO
 #else
-  #define BOARD BOARD_TYPE_UNKNOW
+  #define BOARD BOARD_TYPE_UNKNOWN
 #endif
 
 /***********************************************************************
@@ -529,18 +534,20 @@ typedef struct {
 
 /***********************************************************************
  * DEVICE TYPE
+ * index - unique identifier for this device (used to look up the device in the device list.)
+ * type  - type of device  (SENSOR_TYPE_DIGITAL_PIN_ARRAY |  SENSOR_TYPE_ANALOG_PIN_ARRAY | SENSOR_TYPE_DIGITAL_PIN | SENSOR_TYPE_PULSE | SENSOR_TYPE_ULTRASONIC)
+ * pins  - this is the list of pins that are associated with this device (pin_type)
 */
 typedef struct {
   int index; // the all important index of the sensor - equivalent to the "name" - used in callbacks
-  int state; // state - single at the moment to handle all the finite states of the sensor
-  int type; // SENSOR_TYPE_DIGITAL_PIN_ARRAY |  SENSOR_TYPE_ANALOG_PIN_ARRAY | SENSOR_TYPE_DIGITAL_PIN | SENSOR_TYPE_PULSE | SENSOR_TYPE_ULTRASONIC
+  int type; // 
   // bool isActive; - not currently needed as inactive sensors are removed from the deviceList
   // int readModulus; // rate of reading or publish sensor data
   LinkedList<pin_type> pins; // the pins currently assigned to this sensor 0 to many
+  // TODO: review all members below here for potential removal as a result of refactoring.
+  int state; // state - single at the moment to handle all the finite states of the sensor
   LinkedList<int> memory; // additional memory for the sensor if needed
   Servo* servo; // servo pointer - in case our device is a servo
-  // TODO: review / refactor and remove the following members of the struct
-  // these are from servos and motors
   int speed; // servos have a "speed" associated with them that's not part of the base servo driver
   int step;
   bool eventsEnabled;
@@ -563,28 +570,23 @@ typedef struct {
  * TODO - work on reducing globals and pass as parameters
 */
 
-int msgSize = 0; // the NUM_BYTES of current message
-unsigned int debounceDelay = 50; // in ms
-byte msgBuf[64];
-
-// Switch to know it the i2c bus has been initiated or not
-boolean i2cInitiated = false;
-
+// The mighty device List.  This contains all active devices that are attached to the arduino.
 LinkedList<device_type> deviceList;
-// device_type* deviceList[MAX_DEVICES];
 
-unsigned long loopCount = 0;
-unsigned long lastMicros = 0;
+// MRLComm message buffer and current count from serial port ( MAGIC | MSGSIZE | FUNCTION | PAYLOAD ...
+int msgSize = 0; // the NUM_BYTES of current message (second byte of mrlcomm protocol)
+byte msgBuf[MAX_MSG_SIZE]; // message buffer for reading the next mrlcomm message.
 int byteCount = 0;
-unsigned char newByte = 0;
+
+unsigned long loopCount = 0; // main loop count
 unsigned char ioCmd[64];  // message buffer for all inbound messages
+unsigned int debounceDelay = 50; // in ms
 
-// FIXME - normalize with sampleRate ..
-int loadTimingModulus = 1000;
-
-// load timing related
+// performance metrics  and load timing
 bool loadTimingEnabled = false;
-unsigned long loadTime = 0;
+int loadTimingModulus = 1000; // the frequency in which to report the load timing metrics (in number of loops)
+unsigned long lastMicros = 0; // timestamp of last loop (if stats enabled.)
+
 
 // sensor sample rate
 unsigned int sampleRate = 1; // 1 - 65,535 modulus of the loopcount - allowing you to sample less
@@ -592,6 +594,8 @@ unsigned int sampleRate = 1; // 1 - 65,535 modulus of the loopcount - allowing y
 // define any functions that pass structs into them.
 void sendServoEvent(device_type& s, int eventType);
 
+// Switch to know it the i2c bus has been initiated or not
+bool i2cInitiated = false;
 
 bool debug = false;
 
@@ -690,7 +694,7 @@ bool getCommand() {
     // now we should loop over the available bytes .. not just read one by one.
     for (int i = 0 ; i < bytesAvailable; i++) {
       // read the incoming byte:
-      newByte = Serial.read();
+      unsigned char newByte = Serial.read();
       publishDebug("RX:" + String(newByte));
       ++byteCount;
       // checking first byte - beginning of message?
@@ -1176,25 +1180,21 @@ void updateDevices() {
   } // end for each pin
 }
 
-/**
+/***********************************************************************
  * UPDATE DEVICES END
- **********************************************************************/
+ */
+ 
 /**
- * This function updates how long it took to run this loop
- * and reports it back to the serial port if desired.
- *
- * TODO - find the average between sending vs a single sample
- * TODO - let the user set loadTimingModulus with Hz input
+ * This function updates the average time it took to run the main loop
+ * and reports it back with a publishStatus MRLComm message
  */
 void updateStatus() {
-  // FIXME - fix overflow with getDiff() method !!!
-  unsigned long now = micros();
-  loadTime = now - lastMicros; // avg outside
-  lastMicros = now;
+  // TODO: protect against a divide by zero
+  unsigned long avgTiming = (micros() - lastMicros) / loadTimingModulus;
   // report load time
   if (loadTimingEnabled && (loopCount%loadTimingModulus == 0)) {
-    // send it
-    publishStatus(loadTime, getFreeRam());
+    // send the average loop timing.
+    publishStatus(avgTiming, getFreeRam());
   }
 }
 
