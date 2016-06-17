@@ -32,12 +32,11 @@ public interface Device extends NameProvider {
 	public final static int SENSOR_TYPE_DIGITAL_PIN_ARRAY = 2;
 	public final static int SENSOR_TYPE_PULSE = 3;
 	public final static int SENSOR_TYPE_ULTRASONIC = 4;
-	public final static int SENSOR_TYPE_I2C = 5;
 	// controllers (write)
-	public final static int DEVICE_TYPE_STEPPER = 6;
-	public final static int DEVICE_TYPE_MOTOR = 7;
-  public final static int DEVICE_TYPE_SERVO = 8;
-  public final static int DEVICE_TYPE_I2C = 9;
+	public final static int DEVICE_TYPE_STEPPER = 5;
+	public final static int DEVICE_TYPE_MOTOR = 6;
+    public final static int DEVICE_TYPE_SERVO = 7;
+    public final static int DEVICE_TYPE_I2C = 8;
 	/**
 	 * index of the device on the micro controller side. an null index would be
 	 * a device not yet attached to a microcontroller
