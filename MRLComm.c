@@ -476,12 +476,11 @@ void LinkedList<T>::clear() {
 #define SENSOR_TYPE_DIGITAL_PIN_ARRAY  	2
 #define SENSOR_TYPE_PULSE  				      3
 #define SENSOR_TYPE_ULTRASONIC  		    4
-#define SENSOR_TYPE_I2C                 5
 
-#define DEVICE_TYPE_STEPPER  			      6
-#define DEVICE_TYPE_MOTOR  				      7
-#define DEVICE_TYPE_SERVO  				      8
-#define DEVICE_TYPE_I2C                 9
+#define DEVICE_TYPE_STEPPER  			      5
+#define DEVICE_TYPE_MOTOR  				      6
+#define DEVICE_TYPE_SERVO  				      7
+#define DEVICE_TYPE_I2C                 8
 /**
 * GLOBAL DEVICE TYPES END
 **********************************************************************/
@@ -575,18 +574,14 @@ LinkedList<device_type> deviceList;
 
 // MRLComm message buffer and current count from serial port ( MAGIC | MSGSIZE | FUNCTION | PAYLOAD ...
 int msgSize = 0; // the NUM_BYTES of current message (second byte of mrlcomm protocol)
-byte msgBuf[MAX_MSG_SIZE]; // message buffer for reading the next mrlcomm message.
+unsigned char ioCmd[MAX_MSG_SIZE];  // message buffer for all inbound messages
 int byteCount = 0;
-
 unsigned long loopCount = 0; // main loop count
-unsigned char ioCmd[64];  // message buffer for all inbound messages
 unsigned int debounceDelay = 50; // in ms
-
 // performance metrics  and load timing
 bool loadTimingEnabled = false;
-int loadTimingModulus = 1000; // the frequency in which to report the load timing metrics (in number of loops)
+int loadTimingModulus = 1000; // the frequency in which to report the load timing metrics (in number of main loops)
 unsigned long lastMicros = 0; // timestamp of last loop (if stats enabled.)
-
 
 // sensor sample rate
 unsigned int sampleRate = 1; // 1 - 65,535 modulus of the loopcount - allowing you to sample less
@@ -637,6 +632,8 @@ void loop() {
   updateDevices();
   // update memory & timing
   updateStatus();
+  // update the timestamp for this loop.
+  lastMicros = micros();
 } // end of big loop
 
 /**
@@ -744,6 +741,7 @@ void processCommand() {
     pinMode(ioCmd[1], ioCmd[2]);
     break;
   case SERVO_ATTACH:
+    // TODO: replace this with deviceAttach
     servoAttach();
     break;
   case SERVO_SWEEP_START:
@@ -875,14 +873,22 @@ void i2cRead(){
   WIRE.write(ioCmd[2]);             // device memory address to read from
   WIRE.endTransmission();
   WIRE.requestFrom((uint8_t)ioCmd[1], (uint8_t)ioCmd[3]); // reqest a number of bytes to read
+  // Start an mrlcomm message
   Serial.write(MAGIC_NUMBER);
-	Serial.write(ioCmd[3]);
-	Serial.write(16);                     // TODO Replace with proper PUBLISH_I2C_DATA 
+  // size of the mrlcomm message
+	Serial.write(1 + ioCmd[3]);
+	// mrlcomm function
+	Serial.write(PUBLISH_SENSOR_DATA);
+	// write the payload bytes
+	// write the device index..
+  // device_type i2cDevice = deviceList.get(??)
+  // write the ioCmd[3]  number of bytes we are going to publish 
   for (int i = 1; i < ioCmd[3]; i++) {  // read the requested bytes            
-    if (WIRE.available()){              // slave may send less than requested
+    int numBytesToRead = WIRE.available();
+    if (numBytesToRead > 0) {              // slave may send less than requested
+      // WIRE.read() has a timeout..  
       Serial.write(WIRE.read());        // and pass back to the host
-    }
-	  else {
+    } else {
 	    Serial.write(0);                 // to aviod incomplete messages
     }
   }
@@ -1161,16 +1167,28 @@ void updateDevices() {
     	  updateDigitalPinArray(device);
         break;
       }
-      case SENSOR_TYPE_ULTRASONIC: {
-    	  updateUltrasonic(device);
-        break;
-      }
       case SENSOR_TYPE_PULSE: {
         updatePulse(device);
         break;
       }
+      case SENSOR_TYPE_ULTRASONIC: {
+    	  updateUltrasonic(device);
+        break;
+      }
+      case DEVICE_TYPE_STEPPER: {
+    	  updateStepper(device);
+        break;
+      }
+      case DEVICE_TYPE_MOTOR: {
+    	  updateMotor(device);
+        break;
+      }
       case DEVICE_TYPE_SERVO: {
     	  updateServo(device);
+        break;
+      }
+      case DEVICE_TYPE_I2C: {
+    	  updateI2C(device);
         break;
       }
       default:
@@ -1201,11 +1219,13 @@ void updateStatus() {
 
 // SERVO_ATTACH
 void servoAttach() {
+  
   device_type s = deviceList.get(ioCmd[1]);
   s.index = ioCmd[1];
   if (s.servo == NULL) {
     s.servo = new Servo();
   }
+  // Servo takes 1 pin
   s.servo->attach(ioCmd[2]);
   s.step = 1;
   s.eventsEnabled = false;
@@ -1243,7 +1263,34 @@ void attachDevice(){
 		  deviceIndex = attachDigitalPinArray();
 		  break;
 	  }
-
+    case SENSOR_TYPE_PULSE: {
+      // TODO
+      break;
+    }
+    case SENSOR_TYPE_ULTRASONIC: {
+      // TODO
+      break;
+    }
+    case DEVICE_TYPE_STEPPER: {
+      // TODO
+      break;
+    }
+    case DEVICE_TYPE_MOTOR: {
+      // TODO:
+      break;
+    }
+    case DEVICE_TYPE_SERVO: {
+      // TODO:
+      break;
+    }
+    case DEVICE_TYPE_I2C: {
+      // TODO
+      break;
+    }
+	  default: {
+	    // TODO: publish error message
+	    break;
+	  }
 	}
 	publishDeviceAttached(*deviceIndex);
 }
@@ -1450,39 +1497,7 @@ void publishDebug(String message) {
 
 // ================= publish methods end ==================
 
-
 //========== device update methods begin ==================
-// This function handles updating the servo angles (mostly for sweeping?)
-void updateServos(device_type& s) {
-  if (s.isMoving && s.servo != 0) {
-    if (s.currentPos != s.targetPos) {
-      // caclulate the appropriate modulus to drive
-      // the servo to the next position
-      // TODO - check for speed > 0 && speed < 100 - send ERROR back?
-      int speedModulus = (100 - s.speed) * 10;
-      if (loopCount % speedModulus == 0) {
-        int increment = s.step * ((s.currentPos < s.targetPos) ? 1 : -1);
-        // move the servo an increment
-        s.currentPos = s.currentPos + increment;
-        s.servo->write(s.currentPos);
-        if (s.eventsEnabled) sendServoEvent(s, SERVO_EVENT_POSITION_UPDATE);
-      }
-    } else {
-      if (s.isSweeping) {
-        if (s.targetPos == s.min) {
-          s.targetPos = s.max;
-        } else {
-          s.targetPos = s.min;
-        }
-      } else {
-        if (s.eventsEnabled)
-          sendServoEvent(s, SERVO_EVENT_STOPPED);
-        s.isMoving = false;
-      }
-    }
-  }
-}
-
 //add pin.rateModulus, some sensor don't need to send back data every each ms
 void updateAnalogPinArray(device_type& device) {
 	if (device.pins.size() > 0) {
@@ -1617,6 +1632,48 @@ void updatePulse(device_type& sensor) {
 }
 
 void updateServo(device_type& servo) {
-    // TODO: implement me.
+  // TODO: implement me. / test This seems to be just for sweeping stuffs?
+  if (servo.isMoving && servo.servo != 0) {
+    if (servo.currentPos != servo.targetPos) {
+      // caclulate the appropriate modulus to drive
+      // the servo to the next position
+      // TODO - check for speed > 0 && speed < 100 - send ERROR back?
+      int speedModulus = (100 - servo.speed) * 10;
+      if (loopCount % speedModulus == 0) {
+        int increment = servo.step * ((servo.currentPos < servo.targetPos) ? 1 : -1);
+        // move the servo an increment
+        servo.currentPos = servo.currentPos + increment;
+        servo.servo->write(servo.currentPos);
+        if (servo.eventsEnabled) 
+          sendServoEvent(servo, SERVO_EVENT_POSITION_UPDATE);
+      }
+    } else {
+      if (servo.isSweeping) {
+        if (servo.targetPos == servo.min) {
+          servo.targetPos = servo.max;
+        } else {
+          servo.targetPos = servo.min;
+        }
+      } else {
+        if (servo.eventsEnabled)
+          sendServoEvent(servo, SERVO_EVENT_STOPPED);
+        servo.isMoving = false;
+      }
+    }
+  }
+    
+    
+}
+
+void updateStepper(device_type& stepper) {
+  // TODO: implement me  
+}
+
+void updateMotor(device_type& stepper) {
+  // TODO: implement me  
+}
+
+void updateI2C(device_type& device) {
+  
 }
 //========== device update methods end ==================
