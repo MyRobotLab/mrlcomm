@@ -741,7 +741,7 @@ void processCommand() {
     pinMode(ioCmd[1], ioCmd[2]);
     break;
   case SERVO_ATTACH:
-    // TODO: replace this with deviceAttach
+    // TODO: replace this with attachDevice
     servoAttach();
     break;
   case SERVO_SWEEP_START:
@@ -1219,7 +1219,8 @@ void updateStatus() {
 
 // SERVO_ATTACH
 void servoAttach() {
-  
+  // TODO: this is completely wrong, we need to create
+  // a new device and return it's index.
   device_type s = deviceList.get(ioCmd[1]);
   s.index = ioCmd[1];
   if (s.servo == NULL) {
