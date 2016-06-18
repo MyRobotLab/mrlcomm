@@ -551,7 +551,11 @@ class Device {
     Device(int t) {
       type = t;
     }
-    
+    ~Device(){
+      while(pins.size()>0){
+        delete pins.pop();
+      }
+    }
     int index; // the all important index of the sensor - equivalent to the "name" - used in callbacks
     int type; // 
     LinkedList<Pin*> pins; // the pins currently assigned to this sensor 0 to many
@@ -576,39 +580,44 @@ class Device {
 
 
 class MrlServo : public Device {
+  public:
+    Servo* servo; // servo pointer - in case our device is a servo
+    int pin;
+    bool isMoving;
+    bool isSweeping;
+    int targetPos;
+    int currentPos;
+    int speed; // servos have a "speed" associated with them that's not part of the base servo driver
+    
+    MrlServo(int p) : Device(DEVICE_TYPE_SERVO) {
+       pin = p;
+       isMoving = false;
+       isSweeping = false;
+       // TODO: target/curent position?
+       // create the servo
+       servo = new Servo();
+       servo->attach(pin);
+    }
+    
+    ~MrlServo(){
+      servo->detach();
+      delete servo;
+    }
   
-  Servo* servo; // servo pointer - in case our device is a servo
-  int pin;
-  bool isMoving;
-  bool isSweeping;
-  int targetPos;
-  int currentPos;
-  int speed; // servos have a "speed" associated with them that's not part of the base servo driver
-  
-  MrlServo::MrlServo(int p) : Device(DEVICE_TYPE_SERVO) {
-     pin = p;
-     isMoving = false;
-     isSweeping = false;
-     // TODO: target/curent position?
-     // create the servo
-     servo = new Servo();
-     servo.attach(pin);
-  }
-  
-}
+};
 
 class MrlMotor : public Device {
   // details of the different motor controls/types  
-}
+};
 
 class MrlAnalogPinArray : public Device {
   // specific stuffs for analog pins (sample rates?)
-}
+};
 
 class MrlDigitalPinArray : public Device {
   // config such as if they should publish the value in every loop
   // or only on a state change.
-}
+};
 
 
 /***********************************************************************
@@ -705,16 +714,9 @@ int getFreeRam()
 }
 
 void softReset() {
-  int size = deviceList.size();
-  for (int i = 0; i < size; i++) {
-    Device* s = deviceList.get(i);
-    s->speed = 100;
-    if (s->servo != 0) {
-      s->servo->detach();
-      delete s->servo;
-    }
+  while(deviceList.size()>0){
+    delete deviceList.pop();
   }
-  deviceList.clear();
   //resetting global var to default
   loopCount = 0;
   loadTimingModulus=1000;
@@ -979,7 +981,7 @@ void servoWriteMicroseconds() {
   // TODO - incorporate into speed control etc
   // normalize - currently by itself doesn't effect events
   // nor is it involved in speed control
-  Device* s = deviceList.get(ioCmd[1]);
+  MrlServo* s = (MrlServo*)deviceList.get(ioCmd[1]);
   if (s->servo != 0) {
     // 1500 midpoint
     s->servo->writeMicroseconds(ioCmd[2]);
@@ -989,13 +991,13 @@ void servoWriteMicroseconds() {
 // SET_SERVO_SPEED
 void setServoSpeed() {
   // setting the speed of a servo
-  Device* servo = deviceList.get(ioCmd[1]);
+  MrlServo* servo = (MrlServo*)deviceList.get(ioCmd[1]);
   servo->speed = ioCmd[2];
 }
 
 // SERVO_DETACH
 void servoDetach() {
-  Device* s = deviceList.get(ioCmd[1]);
+  MrlServo* s = (MrlServo*)deviceList.get(ioCmd[1]);
   if (s->servo != 0) {
     s->servo->detach();
   }
@@ -1155,7 +1157,7 @@ void setSampleRate() {
 
 // SERVO_START_SWEEP
 void servoStartSweep() {
-  Device* s = deviceList.get(ioCmd[1]);
+  MrlServo* s = (MrlServo*)deviceList.get(ioCmd[1]);
   s->min = ioCmd[2];
   s->max = ioCmd[3];
   s->step = ioCmd[4];
@@ -1165,7 +1167,7 @@ void servoStartSweep() {
 
 // SERVO_STOP_SWEEP
 void servoStopSweep() {
-  Device* s = deviceList.get(ioCmd[1]);
+  MrlServo* s = (MrlServo*)deviceList.get(ioCmd[1]);
   s->isMoving = false;
   s->isSweeping = false;
 }
@@ -1177,7 +1179,7 @@ void servoEventsEnabled() {
 
 // SERVO_WRITE
 void servoWrite() {
-  Device* s = deviceList.get(ioCmd[1]);
+  MrlServo* s = (MrlServo*)deviceList.get(ioCmd[1]);
   if (s->speed == 100 && s->servo != 0) {
     // move at regular/full 100% speed
     s->targetPos = ioCmd[2];
@@ -1236,7 +1238,7 @@ void updateDevices() {
         break;
       }
       case DEVICE_TYPE_SERVO: {
-    	  updateServo(device);
+    	  updateServo((MrlServo*)device);
         break;
       }
       case DEVICE_TYPE_I2C: {
@@ -1273,7 +1275,7 @@ void updateStatus() {
 void servoAttach() {
   // TODO: this is completely wrong, we need to create
   // a new device and return it's index.
-  Device* s = deviceList.get(ioCmd[1]);
+  MrlServo* s = (MrlServo*)deviceList.get(ioCmd[1]);
   s->index = ioCmd[1];
   if (s->servo == NULL) {
     s->servo = new Servo();
@@ -1386,7 +1388,7 @@ Device* attachServo() {
   // configSize "should" = 1 
   int pinAddress       = ioCmd[3];
   // is this a copy constructor ? 
-  Device* device = new Device(DEVICE_TYPE_SERVO);
+  MrlServo* device = new MrlServo(DEVICE_TYPE_SERVO);
   Servo* s = new Servo();
   
   s->attach(pinAddress);
@@ -1517,7 +1519,7 @@ void publishDeviceAttached(Device& ptr){
 
 
 // publish a servo event.
-void sendServoEvent(Device* s, int eventType) {
+void sendServoEvent(MrlServo* s, int eventType) {
   // check type of event - STOP vs CURRENT POS
   Serial.write(MAGIC_NUMBER);
   Serial.write(5); // size = 1 FN + 1 INDEX + 1 eventType + 1 curPos
@@ -1719,7 +1721,7 @@ void updatePulse(Device* sensor) {
   // publishPulse(pin.state, pin.sensorIndex, pin.address, pin.count);
 }
 
-void updateServo(Device* servo) {
+void updateServo(MrlServo* servo) {
   // TODO: implement me. / test This seems to be just for sweeping stuffs?
   if (servo->isMoving && servo->servo != 0) {
     if (servo->currentPos != servo->targetPos) {
