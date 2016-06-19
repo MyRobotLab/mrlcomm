@@ -1052,10 +1052,10 @@ void i2cRead(){
   	Serial.write(1 + ioCmd[3]);
   	// mrlcomm function
   	Serial.write(PUBLISH_SENSOR_DATA);
-  	Serial.write(0)//get the DEVICE_INDEX
+  	Serial.write(0);//get the DEVICE_INDEX
   	// I2C device are only sending back data, some more identifier should be added
   	//return the request bytes, incomplete message will be padded with 0xFF bytes
-  	Serial.write(answer)
+  	Serial.write(answer);
     for (int i = 1; i<answer; i++){
       Serial.write(Wire.read());
     }
