@@ -4,6 +4,7 @@
 #include "ArduinoMsgCodec.h"
 #include "LinkedList.h"
 #include "MrlIo.h"
+#include "Arduino.h"
 
 
 // ------ error types ------
