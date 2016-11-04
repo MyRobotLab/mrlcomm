@@ -1,8 +1,8 @@
 #ifndef LinkedList_cpp
 #define LinkedList_cpp
 
-#include "Emulator.h"
 #include "LinkedList.h"
+#include "Arduino.h"
 
 // Initialize LinkedList with false values
 template<typename T>

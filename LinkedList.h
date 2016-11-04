@@ -10,8 +10,6 @@
 #ifndef LinkedList_h
 #define LinkedList_h
 
-#include "Arduino.h"
-
 template<class T>
 struct ListNode
 {
