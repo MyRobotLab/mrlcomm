@@ -12,14 +12,15 @@ typedef unsigned char byte;
 #include "Serial.h"
 #include "Servo.h"
 #include "HardwareSerial.h"
-
+#include "WString.h"
 
 unsigned long micros();
 unsigned long millis();
 void digitalWrite(int pin, int value);
 void analogWrite(int pin, int value);
 void pinMode(int pin, int value);
-
-
+int digitalRead(int pin);
+int analogRead(int pin);
 
 #endif VIRTUAL_ARDUINO_H
+
