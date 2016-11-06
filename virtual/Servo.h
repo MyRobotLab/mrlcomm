@@ -10,8 +10,12 @@
 
 class Servo {
 public:
-	Servo();
-	virtual ~Servo();
+	Servo(){};
+	virtual ~Servo(){};
+	void detach(){};
+	void write(int){};
+	void attach(int){};
+	void writeMicroseconds(int){};
 };
 
 #endif /* VIRTUAL_SERVO_H_ */

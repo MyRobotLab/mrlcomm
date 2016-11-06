@@ -395,17 +395,17 @@ void MrlComm::setPWMFrequency(int address, int prescalar) {
 	// sets frequency of pwm of analog
 	// FIXME - us ifdef appropriate uC which
 	// support these clocks TCCR0B
-	int clearBits = 0x07;
-	if (address == 0x25) {
-		TCCR0B &= ~clearBits;
-		TCCR0B |= prescalar;
-	} else if (address == 0x2E) {
-		TCCR1B &= ~clearBits;
-		TCCR1B |= prescalar;
-	} else if (address == 0xA1) {
-		TCCR2B &= ~clearBits;
-		TCCR2B |= prescalar;
-	}
+	// int clearBits = 0x07;
+	// if (address == 0x25) {
+	// 	TCCR0B &= ~clearBits;
+	// 	TCCR0B |= prescalar;
+	// } else if (address == 0x2E) {
+	// 	TCCR1B &= ~clearBits;
+	// 	TCCR1B |= prescalar;
+	// } else if (address == 0xA1) {
+	// 	TCCR2B &= ~clearBits;
+	// 	TCCR2B |= prescalar;
+	// }
 }
 
 // SET_SERIAL_RATE

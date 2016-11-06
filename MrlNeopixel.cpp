@@ -61,6 +61,7 @@ bool MrlNeopixel::deviceAttach(unsigned char config[], int configSize) {
 }
 
 inline void MrlNeopixel::sendBitB(bool bitVal) {
+#ifndef VIRTUAL_ARDUINO_H
 	uint8_t bit = bitmask;
 	if (bitVal) {        // 0 bit
 		PORTB |= bit;
@@ -104,9 +105,12 @@ inline void MrlNeopixel::sendBitB(bool bitVal) {
 		sei();
 		//activate interrupts
 	}
+
+	#endif
 }
 
 inline void MrlNeopixel::sendBitC(bool bitVal) {
+#ifndef VIRTUAL_ARDUINO_H
 	uint8_t bit = bitmask;
 	if (bitVal) {        // 0 bit
 		PORTC |= bit;
@@ -153,6 +157,8 @@ inline void MrlNeopixel::sendBitC(bool bitVal) {
 	// Note that the inter-bit gap can be as long as you want as long as it doesn't exceed the 5us reset timeout (which is A long time)
 	// Here I have been generous and not tried to squeeze the gap tight but instead erred on the side of lots of extra time.
 	// This has thenice side effect of avoid glitches on very long strings becuase
+
+	#endif
 }
 #if defined(ARDUINO_AVR_MEGA2560) || defined(ARDUINO_AVR_ADK)
 
@@ -515,6 +521,7 @@ inline void MrlNeopixel::sendBitA(bool bitVal) {
 #endif
 
 inline void MrlNeopixel::sendBitD(bool bitVal) {
+#ifndef VIRTUAL_ARDUINO_H
 	uint8_t bit = bitmask;
 	if (bitVal) {        // 0 bit
 		PORTD |= bit;
@@ -558,7 +565,7 @@ inline void MrlNeopixel::sendBitD(bool bitVal) {
 		sei();
 		//activate interrupts
 	}
-
+#endif
 }
 
 inline void MrlNeopixel::sendByte(unsigned char byte) {
