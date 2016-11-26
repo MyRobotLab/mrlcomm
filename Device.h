@@ -24,14 +24,16 @@
 // TODO: consider rename to DEVICE_TYPE_UNKNOWN ?  currently this isn't called anywhere
 #define DEVICE_TYPE_NOT_FOUND           0
 
-#define DEVICE_TYPE_ARDUINO			    1
+#define DEVICE_TYPE_ARDUINO             1
 #define DEVICE_TYPE_ULTRASONIC          4
 #define DEVICE_TYPE_STEPPER             5
 #define DEVICE_TYPE_MOTOR               6
 #define DEVICE_TYPE_SERVO               7
 #define DEVICE_TYPE_I2C                 8
 #define DEVICE_TYPE_NEOPIXEL            9
+#define DEVICE_TYPE_SERIAL              10
 
+class Msg;
 
 /**
 * GLOBAL DEVICE TYPES END
@@ -40,22 +42,28 @@
 
 class Device {
   public:
-    Device(int deviceType);
+	// deviceId is supplied by a parameter in an 'attach' message
+	// deviceType is supplied by the device class as a form of runtime
+	// class identification (rtti)
+    Device(byte deviceId, byte deviceType);
     virtual ~Device(){
       // default destructor for the device class. 
       // destructor is set as virtual to call the destructor of the subclass. 
       // destructor should be done in the subclass level
     }
+
     int id; // the all important id of the sensor - equivalent to the "name" - used in callbacks
     int type; // what type of device is this?
     int state; // state - single at the moment to handle all the finite states of the sensors (todo maybe this moves into the subclasses?)
-    // GroG - I think its good here - a uniform state description across all devices is if they are DEVICE_STATE_ACTIVE or DEVICE_STATE_DEACTIVE
-    // subclasses can/should define their os substate - eg ULTRASONIC_STATE_WAITING_PULSE etc..
     virtual void update() {}; // all devices must implement this to update their state.
     // the universal attach - follows Java-Land Controller.deviceAttach method
-    virtual bool deviceAttach(unsigned char[], int);
-    static int nextDeviceId;
+    // virtual bool deviceAttach(const unsigned char[], const int);
+
+    // Msg is the generated interface for all communication
+    Msg* msg;
+
   protected:
+
     void attachDevice();
 };
 
