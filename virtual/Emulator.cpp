@@ -5,6 +5,7 @@
  *      Author: gperry
  */
 
+#include <Arduino.h>
 #include "Emulator.h"
 
 Emulator::Emulator() {

@@ -13,6 +13,7 @@
 #define OUTPUT 0x1
 #define INPUT_PULLUP 0x2
 
+typedef bool boolean;
 typedef unsigned char byte;
 typedef unsigned char uint8_t;
 

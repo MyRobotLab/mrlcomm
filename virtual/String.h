@@ -13,9 +13,12 @@ class StringSumHelper;
 
 class String {
 public:
+	char* cstr;
+
 	String(){};
 	String(const char *cstr = ""){};
 	String(const String &str){};
+	char* c_str(){ return cstr; };
 	explicit String(char c){};
 	explicit String(unsigned char, unsigned char base=10){};
 	explicit String(int, unsigned char base=10){};

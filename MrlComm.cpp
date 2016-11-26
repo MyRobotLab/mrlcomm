@@ -1,7 +1,7 @@
 #include "Msg.h"
 #include "Device.h"
 #include "Pin.h"
-#include "MrlNeoPixel.h"
+#include "MrlNeopixel.h"
 #include "Servo.h"
 #include "MrlServo.h"
 #include "MrlI2cBus.h"
