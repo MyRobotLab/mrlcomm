@@ -117,7 +117,6 @@ public:
 	void writeb32(const long value);
 	void writebu32(const unsigned long value);
 	void write(const unsigned char* buffer, int len);
-	void writestr(const char* buffer);
 	bool readMsg();
 
 };

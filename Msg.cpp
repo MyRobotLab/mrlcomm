@@ -704,11 +704,6 @@ void Msg::write(const unsigned char* buffer, int len) {
 	serial->write(buffer, len);
 }
 
-void Msg::writestr(const char* buffer) {
-	serial->write(strlen(buffer));
-	serial->write(buffer);
-}
-
 void Msg::writebool(const bool value){
 	if (value){
 		write(0);

@@ -336,8 +336,8 @@ void MrlComm::heartbeat() {
 	lastHeartbeatUpdate = millis();
 }
 
-// > i2cAttach/deviceId/i2cBus/deviceType/deviceAddress
-void MrlComm::i2cAttach(byte deviceId, byte i2cBus, byte deviceType, byte deviceAddress) {
+// > i2cBusAttach/deviceId/i2cBus
+void MrlComm::i2cBusAttach(byte deviceId, byte i2cBus) {
 	// @Mats - do you need deviceType & deviceAddress here ?
 	// if not we should shorten the i2cAttach parameters :)
 	MrlI2CBus* i2cbus = (MrlI2CBus*) addDevice(new MrlI2CBus(deviceId));
