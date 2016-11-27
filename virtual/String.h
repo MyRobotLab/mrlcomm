@@ -18,7 +18,7 @@ public:
 	String(){};
 	String(const char *cstr = ""){};
 	String(const String &str){};
-	char* c_str(){ return cstr; };
+	const char* c_str() const { return cstr; };
 	explicit String(char c){};
 	explicit String(unsigned char, unsigned char base=10){};
 	explicit String(int, unsigned char base=10){};
@@ -28,7 +28,7 @@ public:
 	explicit String(float, unsigned char decimalPlaces=2){};
 	explicit String(double, unsigned char decimalPlaces=2){};
 	virtual ~String(){};
-	int length(){return 0;};
+	const int length() const {return 0;};
 	unsigned char operator[](int){return 0;};
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const String &rhs){StringSumHelper &a= const_cast<StringSumHelper&>(lhs); return a;};
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const char *cstr){StringSumHelper &a= const_cast<StringSumHelper&>(lhs); return a;};

@@ -25,8 +25,8 @@
  */
 
 MrlComm::MrlComm() {
-	softReset();
 	msg = Msg::getInstance(this);
+	softReset();
 }
 
 MrlComm::~MrlComm() {
@@ -468,9 +468,11 @@ void MrlComm::softReset() {
 	while (deviceList.size() > 0) {
 		delete deviceList.pop();
 	}
+
 	while (pinList.size() > 0) {
 		delete pinList.pop();
 	}
+
 	//resetting variables to default
 	loopCount = 0;
 	publishBoardStatusModulus = 10000;

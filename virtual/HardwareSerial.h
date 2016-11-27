@@ -13,12 +13,13 @@ public:
 	HardwareSerial(){};
     virtual ~HardwareSerial(){};
     void begin(int){};
-    void write(unsigned char){};
-    void write(unsigned char*, int){};
+    void write(const unsigned char){};
+    void write(const unsigned char*, int){};
     unsigned char read(){return 0;};
     int available(){return 0;};
     void end(){};
     void flush(){};
+    operator bool() { return true; }
 };
 
 

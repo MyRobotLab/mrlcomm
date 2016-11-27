@@ -73,8 +73,7 @@ Emulator::~Emulator() {
 // Included as a 3rd party arduino library from here: https://github.com/ivanseidel/LinkedList/
 #include "../LinkedList.h"
 #include "../MrlComm.h"
-//#include <stdlib.h>
- #include <iostream>
+#include <iostream>
 
 /***********************************************************************
  * GLOBAL VARIABLES
@@ -89,13 +88,10 @@ MrlComm mrlComm;
  * Here we default out serial port to 115.2kbps.
 */
 void setup() {
-  // TODO: the arduino service might get a few garbage bytes before we're able
-  // to run, we should consider some additional logic here like a "publishReset"
-  // publish version on startup so it's immediately available for mrl.
-  // TODO: see if we can purge the current serial port buffers
-  mrlComm.publishVersion();
-  // publish the board type (uno/mega)
-  mrlComm.publishBoardInfo();
+	Serial.begin(115200);
+
+	// start with standard serial & rate
+	mrlComm.begin(Serial);
 
 }
 
@@ -105,18 +101,22 @@ void setup() {
  * main loop any arduino sketch runs
  */
 void loop() {
-  // increment how many times we've run
-  // TODO: handle overflow here after 32k runs, i suspect this might blow up?
-  mrlComm.loopCount++;
-  // get a command and process it from the serial port (if available.)
-  mrlComm.readCommand();
-  // update devices
-  mrlComm.updateDevices();
-  // send back load time and memory
-  mrlComm.publishBoardStatus();
+ 	// increment how many times we've run
+	// TODO: handle overflow here after 32k runs, i suspect this might blow up?
+	mrlComm.loopCount++;
+	// get a command and process it from
+	// the serial port (if available.)
+	if (mrlComm.readMsg()) {
+		mrlComm.processCommand();
+	}
+	// update devices
+	mrlComm.updateDevices();
+	// send back load time and memory
+	mrlComm.publishBoardStatus();
 } // end of big loop
 
 int main() {
+  std::cout << "starting";
   setup();
   for (int i = 0; i < 100; i++){
     loop();
