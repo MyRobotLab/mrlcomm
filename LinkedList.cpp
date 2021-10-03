@@ -18,7 +18,7 @@ LinkedList<T>::LinkedList() {
 template<typename T>
 LinkedList<T>::~LinkedList() {
   ListNode<T>* tmp;
-  while(root!=false) {
+  while(root!=NULL) {
     tmp=root;
     root=root->next;
     delete tmp;
@@ -50,7 +50,7 @@ ListNode<T>* LinkedList<T>::getNode(int index) {
     lastNodeGot = current;
     return current;
   }
-  return false;
+  return NULL;
 }
 
 template<typename T>
